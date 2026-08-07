@@ -27,7 +27,7 @@ export async function PUT(request: NextRequest) {
 
   const content = await saveSiteContent(body);
 
-  ["/", "/galeri", "/hakkimizda", "/turlar", "/rota"].forEach((path) => {
+  ["/", "/galeri", "/hakkimizda", "/turlar", "/rota", "/teknemiz"].forEach((path) => {
     revalidatePath(path);
   });
 

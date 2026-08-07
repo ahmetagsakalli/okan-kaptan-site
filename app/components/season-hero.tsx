@@ -58,16 +58,6 @@ export function SeasonHero({ content, season, onSeasonChange }: SeasonHeroProps)
           className="hero-scene"
         />
       </div>
-      <div className="hero-scene-foreground" aria-hidden="true">
-        <Image
-          src="/images/hero-scene.webp"
-          alt=""
-          fill
-          loading="eager"
-          sizes="100vw"
-          className="hero-scene"
-        />
-      </div>
       <h1 id="hero-title" className="hero-title-backdrop">
         {content?.title ?? "4 MEVSİM ETKİNLİK"}
       </h1>

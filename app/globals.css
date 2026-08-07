@@ -108,9 +108,7 @@ a {
 .faq-section,
 .contact-section,
 .google-review-strip {
-  contain: layout paint;
-  content-visibility: auto;
-  contain-intrinsic-size: auto 420px;
+  contain: paint;
 }
 
 .hero {
@@ -303,7 +301,7 @@ a {
   border-radius: 8px;
   padding: 8px;
   background:
-    linear-gradient(145deg, rgba(255, 255, 255, 0.9), rgba(246, 255, 253, 0.74));
+    linear-gradient(145deg, rgba(255, 255, 255, 0.98), rgba(246, 255, 253, 0.94));
   box-shadow:
     0 18px 34px rgba(6, 60, 67, 0.14),
     inset 0 1px 0 rgba(255, 255, 255, 0.8);
@@ -336,7 +334,7 @@ a {
   border-radius: 8px;
   padding: 0 14px;
   color: rgba(16, 37, 37, 0.76);
-  background: rgba(255, 255, 255, 0.46);
+  background: rgba(255, 255, 255, 0.78);
   font-size: 0.9rem;
   font-weight: 540;
 }
@@ -443,7 +441,7 @@ a {
 .hero-scene {
   object-fit: cover;
   object-position: center bottom;
-  transition: filter 360ms ease, opacity 360ms ease;
+  transform: translateZ(0);
 }
 
 .hero-winter .hero-scene {
@@ -457,7 +455,7 @@ a {
   flex-direction: column;
   align-items: center;
   max-width: 1240px;
-  margin: 244px auto 0;
+  margin: 300px auto 0;
   text-align: center;
 }
 
@@ -482,14 +480,14 @@ a {
 
 .hero-title-backdrop {
   position: absolute;
-  top: 24%;
+  top: 19.5%;
   left: 50%;
   z-index: 3;
   width: min(1220px, 94vw);
   margin: 0;
   color: var(--sea-deep);
-  font-size: 4.25rem;
-  font-weight: 660;
+  font-size: clamp(3.2rem, 4.65vw, 4.15rem);
+  font-weight: 600;
   line-height: 0.84;
   text-align: center;
   text-shadow:
@@ -1268,6 +1266,16 @@ a {
   object-fit: contain;
 }
 
+.gallery-modal-video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  border-radius: 8px;
+  background: rgba(2, 18, 22, 0.92);
+  object-fit: contain;
+}
+
 .gallery-modal-caption {
   margin: 0;
   color: rgba(255, 255, 255, 0.84);
@@ -1640,6 +1648,84 @@ a {
   font-size: 0.9rem;
   font-weight: 500;
   line-height: 1.48;
+}
+
+.boat-gallery-strip {
+  display: grid;
+  max-width: 1040px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin: 18px auto 0;
+}
+
+.boat-gallery-thumb {
+  position: relative;
+  overflow: hidden;
+  min-height: 230px;
+  border: 1px solid rgba(255, 255, 255, 0.66);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.5);
+  box-shadow: 0 16px 36px rgba(6, 60, 67, 0.1);
+  contain: layout paint;
+}
+
+.boat-gallery-thumb img {
+  object-fit: cover;
+}
+
+.boat-video-card {
+  max-width: 360px;
+  margin: 20px auto 0;
+  border: 1px solid rgba(255, 255, 255, 0.66);
+  border-radius: 8px;
+  padding: 10px;
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.76), rgba(246, 255, 253, 0.54));
+  box-shadow:
+    0 18px 42px rgba(6, 60, 67, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(16px) saturate(1.08);
+  -webkit-backdrop-filter: blur(16px) saturate(1.08);
+  contain: layout paint;
+}
+
+.boat-video-frame {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  margin-inline: auto;
+  aspect-ratio: 9 / 16;
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  border-radius: 8px;
+  background: rgba(4, 39, 46, 0.12);
+  box-shadow: 0 18px 36px rgba(6, 60, 67, 0.14);
+}
+
+.boat-video-label {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 2;
+  max-width: calc(100% - 20px);
+  border: 1px solid rgba(255, 255, 255, 0.66);
+  border-radius: 999px;
+  padding: 8px 12px;
+  color: var(--sea-deep);
+  background: rgba(255, 255, 255, 0.82);
+  box-shadow: 0 10px 20px rgba(6, 60, 67, 0.12);
+  font-size: 0.84rem;
+  font-weight: 600;
+  line-height: 1.1;
+  backdrop-filter: blur(14px) saturate(1.08);
+  -webkit-backdrop-filter: blur(14px) saturate(1.08);
+}
+
+.boat-video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: rgba(2, 18, 22, 0.92);
+  object-fit: contain;
 }
 
 .service-grid {
@@ -3004,13 +3090,13 @@ a {
   }
 
   .hero-content {
-    margin-top: 218px;
+    margin-top: 180px;
   }
 
   .hero-title-backdrop {
-    top: 24.5%;
+    top: 20%;
     width: min(900px, 94vw);
-    font-size: 2.85rem;
+    font-size: 2.82rem;
   }
 
   .hero-bottom {
@@ -3152,17 +3238,17 @@ a {
     min-height: 780px;
     margin: 8px;
     border-radius: 28px;
-    padding: 96px 18px 36px;
+    padding: 0 18px 36px;
   }
 
   .hero-content {
-    margin-top: 214px;
+    margin-top: 250px;
   }
 
   .hero-title-backdrop {
-    top: 27%;
+    top: 25%;
     width: min(620px, 90vw);
-    font-size: 2.28rem;
+    font-size: 2.24rem;
     line-height: 0.86;
     white-space: normal;
   }
@@ -3298,6 +3384,8 @@ a {
   .trust-grid,
   .captain-grid,
   .boat-info-card,
+  .boat-gallery-strip,
+  .boat-video-card,
   .social-video-grid,
   .gallery-band {
     grid-template-columns: 1fr;
@@ -3309,6 +3397,19 @@ a {
 
   .boat-info-body {
     padding: 24px;
+  }
+
+  .boat-gallery-thumb {
+    min-height: 270px;
+  }
+
+  .boat-video-card {
+    max-width: min(320px, 100%);
+    padding: 8px;
+  }
+
+  .boat-video-frame {
+    width: 100%;
   }
 
   .home-gallery-window {
@@ -3719,18 +3820,18 @@ a {
     min-height: 740px;
     margin: 0;
     border-radius: 0;
-    padding-top: 76px;
+    padding-top: 0;
     padding-bottom: 30px;
   }
 
   .hero-content {
-    margin-top: 220px;
+    margin-top: 250px;
   }
 
   .hero-title-backdrop {
-    top: 27.5%;
+    top: 24%;
     width: min(342px, 88vw);
-    font-size: 1.66rem;
+    font-size: 1.96rem;
     line-height: 0.86;
   }
 
@@ -3781,10 +3882,15 @@ a {
   }
 
   .music-bubble {
+    top: 216px;
     right: 14px;
-    bottom: calc(max(14px, env(safe-area-inset-bottom)) + 126px);
-    max-width: min(250px, calc(100vw - 28px));
+    bottom: auto;
+    max-width: min(224px, calc(100vw - 28px));
     font-size: 0.82rem;
+  }
+
+  .music-bubble::after {
+    display: none;
   }
 
   .section-heading h2,

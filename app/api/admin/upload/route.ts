@@ -6,8 +6,15 @@ import { writePrivateBlobBytes } from "../../../lib/blob-storage";
 
 export const runtime = "nodejs";
 
-const maxUploadBytes = 8 * 1024 * 1024;
-const allowedTypes = new Set(["image/jpeg", "image/png", "image/webp"]);
+const maxImageUploadBytes = 8 * 1024 * 1024;
+const maxVideoUploadBytes = 120 * 1024 * 1024;
+const allowedImageTypes = new Set(["image/jpeg", "image/png", "image/webp"]);
+const allowedVideoTypes = new Set(["video/mp4", "video/webm", "video/quicktime"]);
+const videoExtensions = new Map([
+  ["video/mp4", "mp4"],
+  ["video/webm", "webm"],
+  ["video/quicktime", "mov"],
+]);
 
 function slugifyFilename(name: string) {
   return name
@@ -29,41 +36,82 @@ export async function POST(request: NextRequest) {
   const file = formData?.get("file");
 
   if (!(file instanceof File)) {
-    return NextResponse.json({ message: "Görsel dosyası bulunamadı." }, { status: 400 });
+    return NextResponse.json({ message: "Medya dosyası bulunamadı." }, { status: 400 });
   }
 
-  if (!allowedTypes.has(file.type)) {
-    return NextResponse.json({ message: "Sadece JPG, PNG veya WebP yüklenebilir." }, { status: 400 });
+  const isImage = allowedImageTypes.has(file.type);
+  const isVideo = allowedVideoTypes.has(file.type);
+
+  if (!isImage && !isVideo) {
+    return NextResponse.json(
+      { message: "Sadece JPG, PNG, WebP, MP4, WebM veya MOV yüklenebilir." },
+      { status: 400 },
+    );
   }
 
-  if (file.size > maxUploadBytes) {
+  if (isImage && file.size > maxImageUploadBytes) {
     return NextResponse.json({ message: "Görsel 8 MB'tan küçük olmalı." }, { status: 400 });
   }
 
+  if (isVideo && file.size > maxVideoUploadBytes) {
+    return NextResponse.json({ message: "Video 120 MB'tan küçük olmalı." }, { status: 400 });
+  }
+
   const uploadDir = path.join(process.cwd(), "public", "uploads");
-  const filename = `${Date.now()}-${slugifyFilename(file.name) || "gorsel"}.webp`;
+  const bytes = Buffer.from(await file.arrayBuffer());
+
+  if (isImage) {
+    const filename = `${Date.now()}-${slugifyFilename(file.name) || "gorsel"}.webp`;
+    const blobPathname = `uploads/${filename}`;
+    const outputPath = path.join(uploadDir, filename);
+    const sharp = (await import("sharp")).default;
+    const optimized = await sharp(bytes)
+      .rotate()
+      .resize({ width: 1800, withoutEnlargement: true })
+      .webp({ quality: 78 })
+      .toBuffer();
+
+    if (await writePrivateBlobBytes(blobPathname, optimized, "image/webp")) {
+      return NextResponse.json({
+        url: `/api/media/${blobPathname}`,
+        size: optimized.byteLength,
+        kind: "image",
+        contentType: "image/webp",
+      });
+    }
+
+    await mkdir(uploadDir, { recursive: true });
+    await writeFile(outputPath, optimized);
+
+    return NextResponse.json({
+      url: `/uploads/${filename}`,
+      size: optimized.byteLength,
+      kind: "image",
+      contentType: "image/webp",
+    });
+  }
+
+  const extension = videoExtensions.get(file.type) ?? "mp4";
+  const filename = `${Date.now()}-${slugifyFilename(file.name) || "video"}.${extension}`;
   const blobPathname = `uploads/${filename}`;
   const outputPath = path.join(uploadDir, filename);
-  const bytes = Buffer.from(await file.arrayBuffer());
-  const sharp = (await import("sharp")).default;
-  const optimized = await sharp(bytes)
-    .rotate()
-    .resize({ width: 1800, withoutEnlargement: true })
-    .webp({ quality: 78 })
-    .toBuffer();
 
-  if (await writePrivateBlobBytes(blobPathname, optimized, "image/webp")) {
+  if (await writePrivateBlobBytes(blobPathname, bytes, file.type)) {
     return NextResponse.json({
       url: `/api/media/${blobPathname}`,
-      size: optimized.byteLength,
+      size: bytes.byteLength,
+      kind: "video",
+      contentType: file.type,
     });
   }
 
   await mkdir(uploadDir, { recursive: true });
-  await writeFile(outputPath, optimized);
+  await writeFile(outputPath, bytes);
 
   return NextResponse.json({
     url: `/uploads/${filename}`,
-    size: optimized.byteLength,
+    size: bytes.byteLength,
+    kind: "video",
+    contentType: file.type,
   });
 }

@@ -1,6 +1,5 @@
 import {
   AboutSection,
-  BoatInfoSection,
   CaptainsSection,
   ContactSection,
 } from "../components/content-sections";
@@ -33,7 +32,6 @@ export default async function AboutPage() {
     >
       <AboutSection story={content.aboutStory} />
       <CaptainsSection items={content.captains} />
-      <BoatInfoSection boat={content.boat} specs={content.tourSpecs} />
       <ContactSection />
     </DetailPage>
   );

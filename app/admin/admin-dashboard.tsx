@@ -1,7 +1,18 @@
 "use client";
 
 import Image from "next/image";
-import { CheckCircle2, ImagePlus, KeyRound, LayoutDashboard, LogOut, Plus, Save, ShieldCheck, Trash2 } from "lucide-react";
+import {
+  CheckCircle2,
+  ImagePlus,
+  KeyRound,
+  LayoutDashboard,
+  LogOut,
+  Plus,
+  Save,
+  ShieldCheck,
+  Trash2,
+  Video,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import { ChangeEvent, FormEvent, useMemo, useState } from "react";
 import type {
@@ -11,6 +22,7 @@ import type {
   CmsListGroup,
   CmsSeason,
   CmsService,
+  CmsSocialGalleryItem,
   CmsTextItem,
 } from "../lib/cms-types";
 
@@ -20,6 +32,12 @@ type AdminDashboardProps = {
 
 type AdminTab = "hero" | "services" | "gallery" | "captains" | "routeFaq" | "extra" | "settings";
 type TextItemKey = "tourSpecs" | "mealMenu" | "amenityItems" | "fishingTourHighlights";
+type UploadedMedia = {
+  url: string;
+  kind: "image" | "video";
+  size: number;
+  contentType: string;
+};
 
 const tabs: { id: AdminTab; label: string }[] = [
   { id: "hero", label: "Hero" },
@@ -158,7 +176,7 @@ export function AdminDashboard({ initialContent }: AdminDashboardProps) {
     router.refresh();
   }
 
-  async function uploadImage(file: File, key: string) {
+  async function uploadMedia(file: File, key: string) {
     setUploadingKey(key);
     const formData = new FormData();
     formData.append("file", file);
@@ -172,10 +190,10 @@ export function AdminDashboard({ initialContent }: AdminDashboardProps) {
 
     if (!response.ok) {
       const body = (await response.json().catch(() => null)) as { message?: string } | null;
-      throw new Error(body?.message ?? "Görsel yüklenemedi.");
+      throw new Error(body?.message ?? "Medya yüklenemedi.");
     }
 
-    return ((await response.json()) as { url: string }).url;
+    return (await response.json()) as UploadedMedia;
   }
 
   function updateService(index: number, patch: Partial<CmsService>) {
@@ -288,6 +306,45 @@ export function AdminDashboard({ initialContent }: AdminDashboardProps) {
     }));
   }
 
+  function updateBoatGalleryItem(index: number, patch: Partial<NonNullable<CmsContent["boat"]["gallery"]>[number]>) {
+    updateContent((current) => ({
+      ...current,
+      boat: {
+        ...current.boat,
+        gallery: (current.boat.gallery ?? []).map((item, itemIndex) =>
+          itemIndex === index ? { ...item, ...patch } : item,
+        ),
+      },
+    }));
+  }
+
+  function addBoatGalleryItem() {
+    updateContent((current) => ({
+      ...current,
+      boat: {
+        ...current.boat,
+        gallery: [
+          ...(current.boat.gallery ?? []),
+          {
+            title: "Yeni tekne görseli",
+            src: current.boat.image || "/images/okan-boat-real-wide.webp",
+            alt: "Okan Kaptan tekne görseli",
+          },
+        ],
+      },
+    }));
+  }
+
+  function removeBoatGalleryItem(index: number) {
+    updateContent((current) => ({
+      ...current,
+      boat: {
+        ...current.boat,
+        gallery: (current.boat.gallery ?? []).filter((_, itemIndex) => itemIndex !== index),
+      },
+    }));
+  }
+
   return (
     <main className="admin-shell">
       <header className="admin-topbar">
@@ -297,7 +354,7 @@ export function AdminDashboard({ initialContent }: AdminDashboardProps) {
             Güvenli oturum
           </span>
           <h1>Okan Kaptan Yönetim Paneli</h1>
-          <p>Site içerikleri, rota, SSS ve görseller buradan düzenlenir.</p>
+          <p>Site içerikleri, rota, SSS, görseller ve videolar buradan düzenlenir.</p>
         </div>
         <div className="admin-topbar-actions">
           <a href="/" target="_blank" rel="noreferrer">
@@ -402,7 +459,7 @@ export function AdminDashboard({ initialContent }: AdminDashboardProps) {
                       alt={service.alt}
                       uploadKey={`service-${index}`}
                       uploadingKey={uploadingKey}
-                      onUpload={uploadImage}
+                      onUpload={uploadMedia}
                       onChange={(image) => updateService(index, { image })}
                     />
                     <Field label="Başlık">
@@ -421,13 +478,13 @@ export function AdminDashboard({ initialContent }: AdminDashboardProps) {
           ) : null}
 
           {activeTab === "gallery" ? (
-            <Panel title="Galeri" description="Yaz ve kış galerisi ayrı ayrı düzenlenir. Yüklenen görseller WebP olarak optimize edilir.">
+            <Panel title="Galeri" description="Yaz ve kış galerisi ayrı ayrı düzenlenir. Görseller WebP olarak optimize edilir; videolar direkt yüklenir.">
               {seasons.map((season) => (
                 <div className="admin-season-block" key={season.id}>
                   <div className="admin-section-row">
                     <h3>{season.label} galerisi</h3>
                     <button type="button" onClick={() => addGalleryItem(season.id)}>
-                      Görsel ekle
+                      Medya ekle
                     </button>
                   </div>
                   <Field label="Galeri açıklaması">
@@ -456,9 +513,24 @@ export function AdminDashboard({ initialContent }: AdminDashboardProps) {
                           alt={item.alt}
                           uploadKey={`${season.id}-gallery-${index}`}
                           uploadingKey={uploadingKey}
-                          onUpload={uploadImage}
+                          onUpload={uploadMedia}
                           onChange={(src) => updateGalleryItem(season.id, index, { src })}
                         />
+                        {item.kind === "video" ? (
+                          <MediaField
+                            value={item.videoSrc ?? ""}
+                            alt={`${item.title} videosu`}
+                            uploadKey={`${season.id}-gallery-video-${index}`}
+                            uploadingKey={uploadingKey}
+                            onUpload={uploadMedia}
+                            onChange={(videoSrc) => updateGalleryItem(season.id, index, { videoSrc })}
+                            preview="video"
+                            accept="video/mp4,video/webm,video/quicktime"
+                            buttonLabel="Video seç"
+                            emptyLabel="Video dosyası seçilmedi"
+                            helpText="MP4, WebM veya MOV seçebilirsin. Galeride kapak görseli üstünden açılır."
+                          />
+                        ) : null}
                         <Field label="Başlık">
                           <input value={item.title} onChange={(event) => updateGalleryItem(season.id, index, { title: event.target.value })} />
                         </Field>
@@ -471,7 +543,7 @@ export function AdminDashboard({ initialContent }: AdminDashboardProps) {
                             onChange={(event) => updateGalleryItem(season.id, index, { kind: event.target.value as CmsGalleryItem["kind"] })}
                           >
                             <option value="photo">Fotoğraf</option>
-                            <option value="video">Video kapak</option>
+                            <option value="video">Video</option>
                           </select>
                           <label className="admin-check">
                             <input
@@ -491,9 +563,66 @@ export function AdminDashboard({ initialContent }: AdminDashboardProps) {
                 </div>
               ))}
               <div className="admin-season-block">
-                <h3>Sosyal video bağlantıları</h3>
+                <div className="admin-section-row">
+                  <h3>Sosyal video bağlantıları</h3>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      updateContent((current) => ({
+                        ...current,
+                        socialGalleryItems: [
+                          ...current.socialGalleryItems,
+                          {
+                            platform: "Instagram",
+                            title: "Yeni sosyal video",
+                            href: "https://www.instagram.com/okankaptan35/",
+                            image: "/images/okan-boat-real-cove.webp",
+                            alt: "Okan Kaptan sosyal video kapağı",
+                          },
+                        ],
+                      }))
+                    }
+                  >
+                    <Plus size={16} aria-hidden="true" />
+                    Bağlantı ekle
+                  </button>
+                </div>
+                <div className="admin-repeat-grid">
                 {content.socialGalleryItems.map((item, index) => (
-                  <article className="admin-edit-row" key={item.href}>
+                  <article className="admin-edit-card" key={`${item.href}-${index}`}>
+                    <MediaField
+                      value={item.image}
+                      alt={item.alt}
+                      uploadKey={`social-gallery-${index}`}
+                      uploadingKey={uploadingKey}
+                      onUpload={uploadMedia}
+                      onChange={(image) =>
+                        updateContent((current) => ({
+                          ...current,
+                          socialGalleryItems: current.socialGalleryItems.map((social, socialIndex) =>
+                            socialIndex === index ? { ...social, image } : social,
+                          ),
+                        }))
+                      }
+                    />
+                    <Field label="Platform">
+                      <select
+                        value={item.platform}
+                        onChange={(event) =>
+                          updateContent((current) => ({
+                            ...current,
+                            socialGalleryItems: current.socialGalleryItems.map((social, socialIndex) =>
+                              socialIndex === index
+                                ? { ...social, platform: event.target.value as CmsSocialGalleryItem["platform"] }
+                                : social,
+                            ),
+                          }))
+                        }
+                      >
+                        <option value="Instagram">Instagram</option>
+                        <option value="Facebook">Facebook</option>
+                      </select>
+                    </Field>
                     <Field label="Başlık">
                       <input
                         value={item.title}
@@ -520,8 +649,35 @@ export function AdminDashboard({ initialContent }: AdminDashboardProps) {
                         }
                       />
                     </Field>
+                    <Field label="Kapak alt metni">
+                      <input
+                        value={item.alt}
+                        onChange={(event) =>
+                          updateContent((current) => ({
+                            ...current,
+                            socialGalleryItems: current.socialGalleryItems.map((social, socialIndex) =>
+                              socialIndex === index ? { ...social, alt: event.target.value } : social,
+                            ),
+                          }))
+                        }
+                      />
+                    </Field>
+                    <button
+                      className="admin-danger"
+                      type="button"
+                      onClick={() =>
+                        updateContent((current) => ({
+                          ...current,
+                          socialGalleryItems: current.socialGalleryItems.filter((_, socialIndex) => socialIndex !== index),
+                        }))
+                      }
+                    >
+                      <Trash2 size={16} aria-hidden="true" />
+                      Sil
+                    </button>
                   </article>
                 ))}
+                </div>
               </div>
             </Panel>
           ) : null}
@@ -536,7 +692,7 @@ export function AdminDashboard({ initialContent }: AdminDashboardProps) {
                       alt={captain.alt}
                       uploadKey={`captain-${index}`}
                       uploadingKey={uploadingKey}
-                      onUpload={uploadImage}
+                      onUpload={uploadMedia}
                       onChange={(image) => updateCaptain(index, { image })}
                     />
                     <Field label="İsim">
@@ -727,7 +883,7 @@ export function AdminDashboard({ initialContent }: AdminDashboardProps) {
                   alt={content.boat.alt}
                   uploadKey="boat"
                   uploadingKey={uploadingKey}
-                  onUpload={uploadImage}
+                  onUpload={uploadMedia}
                   onChange={(image) =>
                     updateContent((current) => ({ ...current, boat: { ...current.boat, image } }))
                   }
@@ -749,6 +905,85 @@ export function AdminDashboard({ initialContent }: AdminDashboardProps) {
                     }
                   />
                 </Field>
+                <div className="admin-two-col">
+                  <Field label="Video başlığı">
+                    <input
+                      value={content.boat.videoTitle ?? ""}
+                      onChange={(event) =>
+                        updateContent((current) => ({
+                          ...current,
+                          boat: { ...current.boat, videoTitle: event.target.value },
+                        }))
+                      }
+                    />
+                  </Field>
+                  <MediaField
+                    value={content.boat.videoPoster ?? ""}
+                    alt="Tekne video kapak görseli"
+                    uploadKey="boat-video-poster"
+                    uploadingKey={uploadingKey}
+                    onUpload={uploadMedia}
+                    onChange={(videoPoster) =>
+                      updateContent((current) => ({ ...current, boat: { ...current.boat, videoPoster } }))
+                    }
+                    emptyLabel="Video kapağı seçilmedi"
+                    buttonLabel="Kapak görseli seç"
+                  />
+                </div>
+                <MediaField
+                  value={content.boat.videoSrc ?? ""}
+                  alt="Tekne tanıtım videosu"
+                  uploadKey="boat-video"
+                  uploadingKey={uploadingKey}
+                  onUpload={uploadMedia}
+                  onChange={(videoSrc) =>
+                    updateContent((current) => ({ ...current, boat: { ...current.boat, videoSrc } }))
+                  }
+                  preview="video"
+                  accept="video/mp4,video/webm,video/quicktime"
+                  buttonLabel="Tekne videosu seç"
+                  emptyLabel="Tekne videosu seçilmedi"
+                  helpText="MP4, WebM veya MOV yükleyebilirsin. Video sayfada kapak görseliyle gösterilir."
+                />
+                <div className="admin-season-block">
+                  <div className="admin-section-row">
+                    <h3>Tekne galerisi</h3>
+                    <button type="button" onClick={addBoatGalleryItem}>
+                      <Plus size={16} aria-hidden="true" />
+                      Görsel ekle
+                    </button>
+                  </div>
+                  <div className="admin-repeat-grid">
+                    {(content.boat.gallery ?? []).map((item, index) => (
+                      <article className="admin-edit-card" key={`${item.src}-${index}`}>
+                        <MediaField
+                          value={item.src}
+                          alt={item.alt}
+                          uploadKey={`boat-gallery-${index}`}
+                          uploadingKey={uploadingKey}
+                          onUpload={uploadMedia}
+                          onChange={(src) => updateBoatGalleryItem(index, { src })}
+                        />
+                        <Field label="Başlık">
+                          <input
+                            value={item.title}
+                            onChange={(event) => updateBoatGalleryItem(index, { title: event.target.value })}
+                          />
+                        </Field>
+                        <Field label="Alt metin">
+                          <input
+                            value={item.alt}
+                            onChange={(event) => updateBoatGalleryItem(index, { alt: event.target.value })}
+                          />
+                        </Field>
+                        <button className="admin-danger" type="button" onClick={() => removeBoatGalleryItem(index)}>
+                          <Trash2 size={16} aria-hidden="true" />
+                          Sil
+                        </button>
+                      </article>
+                    ))}
+                  </div>
+                </div>
               </div>
               <EditableTextItems
                 title="Tekne özellikleri ve donanım"
@@ -928,14 +1163,27 @@ function MediaField({
   uploadingKey,
   onUpload,
   onChange,
+  preview = "image",
+  accept = "image/jpeg,image/png,image/webp",
+  buttonLabel,
+  emptyLabel,
+  helpText,
 }: {
   value: string;
-  alt: string;
+  alt?: string;
   uploadKey: string;
   uploadingKey: string;
-  onUpload: (file: File, key: string) => Promise<string>;
+  onUpload: (file: File, key: string) => Promise<UploadedMedia>;
   onChange: (value: string) => void;
+  preview?: "image" | "video";
+  accept?: string;
+  buttonLabel?: string;
+  emptyLabel?: string;
+  helpText?: string;
 }) {
+  const isVideo = preview === "video";
+  const UploadIcon = isVideo ? Video : ImagePlus;
+
   async function onFileChange(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
 
@@ -944,9 +1192,10 @@ function MediaField({
     }
 
     try {
-      onChange(await onUpload(file, uploadKey));
+      const uploaded = await onUpload(file, uploadKey);
+      onChange(uploaded.url);
     } catch (error) {
-      alert(error instanceof Error ? error.message : "Görsel yüklenemedi.");
+      alert(error instanceof Error ? error.message : "Medya yüklenemedi.");
     } finally {
       event.target.value = "";
     }
@@ -954,27 +1203,34 @@ function MediaField({
 
   return (
     <div className="admin-media-field">
-      <div className="admin-media-preview">
-        <Image src={value} alt={alt || "Admin görsel önizlemesi"} fill sizes="220px" />
+      <div className={`admin-media-preview ${value ? "" : "is-empty"} ${isVideo ? "is-video" : ""}`}>
+        {value ? (
+          isVideo ? (
+            <video className="admin-media-video-preview" src={value} controls preload="metadata" />
+          ) : (
+            <Image src={value} alt={alt || "Admin görsel önizlemesi"} fill sizes="220px" />
+          )
+        ) : (
+          <span>{emptyLabel ?? (isVideo ? "Video seçilmedi" : "Görsel seçilmedi")}</span>
+        )}
       </div>
       <label className="admin-upload-button">
-        <ImagePlus size={18} aria-hidden="true" />
+        <UploadIcon size={18} aria-hidden="true" />
         <span>
-          <strong>{uploadingKey === uploadKey ? "Yükleniyor..." : "Fotoğraf seç"}</strong>
-          <small>JPG, PNG veya WebP seç; sistem otomatik küçültür.</small>
+          <strong>{uploadingKey === uploadKey ? "Yükleniyor..." : buttonLabel ?? "Fotoğraf seç"}</strong>
+          <small>{helpText ?? "JPG, PNG veya WebP seç; sistem otomatik küçültür."}</small>
         </span>
-        <input
-          type="file"
-          accept="image/jpeg,image/png,image/webp"
-          disabled={uploadingKey === uploadKey}
-          onChange={onFileChange}
-        />
+        <input type="file" accept={accept} disabled={uploadingKey === uploadKey} onChange={onFileChange} />
       </label>
       <details className="admin-advanced-field">
-        <summary>Görsel yolunu elle yaz</summary>
-        <input value={value} aria-label="Görsel yolu" onChange={(event) => onChange(event.target.value)} />
+        <summary>{isVideo ? "Video yolunu elle yaz" : "Görsel yolunu elle yaz"}</summary>
+        <input
+          value={value}
+          aria-label={isVideo ? "Video yolu" : "Görsel yolu"}
+          onChange={(event) => onChange(event.target.value)}
+        />
       </details>
-      <p className="admin-media-help">Mevcut görsel: {value}</p>
+      <p className="admin-media-help">Mevcut medya: {value || "Henüz seçilmedi"}</p>
     </div>
   );
 }

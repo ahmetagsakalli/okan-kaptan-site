@@ -15,14 +15,14 @@
   "services": [
     {
       "title": "Yaz Gezi ve Yüzme Turu",
-      "image": "/images/okan-boat-cove.webp",
-      "alt": "Okan Kaptan teknesi Mordoğan koyunda yüzme molasında",
+      "image": "/images/okan-boat-real-cove.webp",
+      "alt": "Okan Kaptan teknesi Mordoğan koyunda gerçek tur görüntüsü",
       "text": "İzmir Karaburun'un eşsiz koylarında yemekli veya yemeksiz günlük gezi ve yüzme turu."
     },
     {
       "title": "Kış Olta Balıkçılığı",
-      "image": "/images/winter-fishing.webp",
-      "alt": "Kış sezonu için denizde ilerleyen küçük balıkçı teknesi",
+      "image": "/images/fish-guest-catch-2.webp",
+      "alt": "Okan Kaptan balık turunda misafirin yakaladığı balık",
       "text": "06:00 çıkış, 18:00 dönüş planıyla Mordoğan çevresinde profesyonel olta balıkçılığı."
     },
     {
@@ -35,20 +35,32 @@
   "galleryCollections": {
     "summer": {
       "title": "Yaz galerisi",
-      "summary": "Gezi, yüzme, SUP ve yemekli tekne günü için seçili kareler.",
+      "summary": "Gezi, yüzme, SUP, yemekli tur ve teknenin gerçek tur kareleri.",
       "items": [
         {
           "kind": "photo",
-          "title": "Mordoğan koy molası",
-          "src": "/images/okan-boat-cove.webp",
-          "alt": "Okan Kaptan teknesi Mordoğan koyunda yüzme molasında",
+          "title": "Okan Kaptan teknesi koyda",
+          "src": "/images/okan-boat-real-cove.webp",
+          "alt": "Okan Kaptan teknesi Mordoğan koyunda seyir halinde",
           "featured": true
         },
         {
-          "kind": "video",
-          "title": "Yüzme molası",
-          "src": "/images/summer-swim.webp",
-          "alt": "Yaz turunda denizde yüzme molası"
+          "kind": "photo",
+          "title": "Tekne dış görünüm",
+          "src": "/images/okan-boat-real-wide.webp",
+          "alt": "Okan Kaptan teknesinin deniz üzerindeki dış görünümü"
+        },
+        {
+          "kind": "photo",
+          "title": "Tekne ön alanı",
+          "src": "/images/okan-boat-front-group.webp",
+          "alt": "Okan Kaptan teknesinde ön bölüm ve misafir alanı"
+        },
+        {
+          "kind": "photo",
+          "title": "Tekne iç düzeni",
+          "src": "/images/okan-boat-interior-guests.webp",
+          "alt": "Okan Kaptan teknesinin iç oturma ve masa düzeni"
         },
         {
           "kind": "photo",
@@ -72,38 +84,53 @@
     },
     "winter": {
       "title": "Kış galerisi",
-      "summary": "Olta balıkçılığı, sakin deniz ve kaptan kontrollü rota için seçili kareler.",
+      "summary": "Olta balıkçılığı, av anları, yakalanan balıklar ve sakin kış rotası.",
       "items": [
         {
           "kind": "photo",
-          "title": "Kış rota çıkışı",
-          "src": "/images/coast-boat.webp",
-          "alt": "Kış sezonunda sakin koy hattında ilerleyen tekne",
+          "title": "Balık turu av keyfi",
+          "src": "/images/fish-guest-catch-1.webp",
+          "alt": "Okan Kaptan balık turunda yakalanan balığı gösteren misafir",
           "featured": true
         },
         {
           "kind": "video",
-          "title": "Olta hazırlığı",
-          "src": "/images/winter-fishing.webp",
-          "alt": "Kış sezonunda olta balıkçılığı için denizde ilerleyen tekne"
+          "title": "Olta balıkçılığı videosu",
+          "src": "/images/fish-guest-catch-2.webp",
+          "videoSrc": "/videos/fishing-catch-1.mp4",
+          "alt": "Okan Kaptan balık turu videosu için yakalanan balık görseli"
         },
         {
           "kind": "photo",
-          "title": "Açık deniz planı",
-          "src": "/images/clear-water.webp",
-          "alt": "Berrak deniz yüzeyi ve sakin rota görünümü"
+          "title": "Günün bereketi",
+          "src": "/images/fish-catch-bucket.webp",
+          "alt": "Okan Kaptan balık turunda kovada yakalanan balıklar"
         },
         {
           "kind": "photo",
-          "title": "Kıyı manzarası",
-          "src": "/images/okan-clear-coast.webp",
-          "alt": "Mordoğan ve Karaburun kıyısında berrak deniz manzarası"
+          "title": "Balık sepeti",
+          "src": "/images/fish-catch-bag.webp",
+          "alt": "Balık turunda gün içinde yakalanan balıklar"
+        },
+        {
+          "kind": "video",
+          "title": "Denizde av anları",
+          "src": "/images/fish-guest-catch-3.webp",
+          "videoSrc": "/videos/fishing-catch-2.mp4",
+          "alt": "Okan Kaptan olta balıkçılığı turundan video kapağı"
         },
         {
           "kind": "photo",
-          "title": "Sakin deniz",
-          "src": "/images/hero-boat.webp",
-          "alt": "Sakin denizde tekne turu görünümü"
+          "title": "Kış rotasında tekne",
+          "src": "/images/fish-boat-side.webp",
+          "alt": "Okan Kaptan teknesi balık turu için liman yanında"
+        },
+        {
+          "kind": "video",
+          "title": "Balık turundan kısa kesit",
+          "src": "/images/fish-catch-bucket.webp",
+          "videoSrc": "/videos/fishing-catch-3.mp4",
+          "alt": "Balık turundan kısa video için yakalanan balıklar"
         }
       ]
     }
@@ -113,15 +140,15 @@
       "platform": "Instagram",
       "title": "Mordoğan tur videosu",
       "href": "https://www.instagram.com/reel/Dbkq5j1SqXI/",
-      "image": "/images/okan-boat-cove.webp",
-      "alt": "Instagram Reel için Mordoğan tekne turu görüntüsü"
+      "image": "/images/okan-boat-real-cove.webp",
+      "alt": "Instagram Reel için Okan Kaptan tekne turu görüntüsü"
     },
     {
       "platform": "Facebook",
       "title": "Tekneden kısa video",
       "href": "https://www.facebook.com/share/v/1CtBctSpmQ/?mibextid=wwXIfr",
-      "image": "/images/summer-swim.webp",
-      "alt": "Facebook videosu için yaz turu yüzme molası görüntüsü"
+      "image": "/images/okan-boat-front-group.webp",
+      "alt": "Facebook videosu için Okan Kaptan tekne görüntüsü"
     }
   ],
   "googleReviewHighlights": [
@@ -187,9 +214,29 @@
   ],
   "boat": {
     "title": "12 kişilik ticari tekne",
-    "text": "Mordoğan Yeni Liman’da bağlı teknemiz; kalabalıktan uzak, aile ve arkadaş gruplarına özel güvenli bir deniz günü için hazırlanır.",
-    "image": "/images/okan-boat-cove.webp",
-    "alt": "Okan Kaptan teknesi Mordoğan koylarında seyir halinde"
+    "text": "Mordoğan Yeni Liman’da bağlı teknemiz; 10 metre boyu, 3.30 metre eni, kapalı WC’si, mutfak kullanımı, can yelekleri ve konforlu oturma alanlarıyla aile ve arkadaş grupları için hazırlanır.",
+    "image": "/images/okan-boat-real-wide.webp",
+    "alt": "Okan Kaptan teknesinin Mordoğan koylarında gerçek dış görünümü",
+    "gallery": [
+      {
+        "title": "Tekne koy görünümü",
+        "src": "/images/okan-boat-real-cove.webp",
+        "alt": "Okan Kaptan teknesi Mordoğan koyunda dururken"
+      },
+      {
+        "title": "Tekne ön bölümü",
+        "src": "/images/okan-boat-front-group.webp",
+        "alt": "Okan Kaptan teknesinde ön bölüm ve misafir alanı"
+      },
+      {
+        "title": "Tekne iç oturma düzeni",
+        "src": "/images/okan-boat-interior-guests.webp",
+        "alt": "Okan Kaptan teknesinde iç oturma ve masa düzeni"
+      }
+    ],
+    "videoTitle": "Teknemizi birlikte gezelim",
+    "videoSrc": "/videos/boat-tour-walkthrough.mp4",
+    "videoPoster": "/images/okan-boat-interior-guests.webp"
   },
   "route": {
     "steps": [

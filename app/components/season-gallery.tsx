@@ -153,13 +153,25 @@ export function SeasonGallery({
               <ChevronLeft size={28} aria-hidden="true" />
             </button>
             <div className="gallery-modal-image">
-              <Image
-                src={selectedItem.src}
-                alt={selectedItem.alt}
-                fill
-                quality={86}
-                sizes="100vw"
-              />
+              {selectedItem.kind === "video" && selectedItem.videoSrc ? (
+                <video
+                  className="gallery-modal-video"
+                  controls
+                  playsInline
+                  preload="metadata"
+                  poster={selectedItem.src}
+                >
+                  <source src={selectedItem.videoSrc} type="video/mp4" />
+                </video>
+              ) : (
+                <Image
+                  src={selectedItem.src}
+                  alt={selectedItem.alt}
+                  fill
+                  quality={86}
+                  sizes="100vw"
+                />
+              )}
             </div>
             <button
               className="gallery-modal-nav gallery-modal-next"

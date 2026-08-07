@@ -7,6 +7,7 @@ const routes = [
   { path: "/hakkimizda", priority: 0.82 },
   { path: "/turlar", priority: 0.9 },
   { path: "/rota", priority: 0.82 },
+  { path: "/teknemiz", priority: 0.82 },
 ];
 
 export default function sitemap(): MetadataRoute.Sitemap {

@@ -31,6 +31,7 @@ export type CmsGalleryItem = {
   kind: "photo" | "video";
   title: string;
   src: string;
+  videoSrc?: string;
   alt: string;
   featured?: boolean;
 };
@@ -67,6 +68,14 @@ export type CmsBoat = {
   text: string;
   image: string;
   alt: string;
+  gallery?: {
+    title: string;
+    src: string;
+    alt: string;
+  }[];
+  videoTitle?: string;
+  videoSrc?: string;
+  videoPoster?: string;
 };
 
 export type CmsRouteStep = CmsTextItem & {

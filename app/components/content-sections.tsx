@@ -350,11 +350,13 @@ export function BoatInfoSection({
   boat = {
     title: "12 kişilik ticari tekne",
     text: "Mordoğan Yeni Liman’da bağlı teknemiz; kalabalıktan uzak, aile ve arkadaş gruplarına özel güvenli bir deniz günü için hazırlanır.",
-    image: "/images/okan-boat-cove.webp",
+    image: "/images/okan-boat-real-wide.webp",
     alt: "Okan Kaptan teknesi Mordoğan koylarında seyir halinde",
   },
   specs = tourSpecs,
 }: BoatInfoSectionProps) {
+  const boatGallery = boat.gallery ?? [];
+
   return (
     <section className="boat-info-section reveal-item" id="tekne" aria-labelledby="tekne-bilgi-title">
       <div className="section-heading compact">
@@ -393,6 +395,41 @@ export function BoatInfoSection({
           </div>
         </div>
       </article>
+      {boatGallery.length > 0 ? (
+        <div className="boat-gallery-strip" aria-label="Tekneden seçili kareler">
+          {boatGallery.map((item) => (
+            <div className="boat-gallery-thumb" key={item.src}>
+              <Image
+                src={item.src}
+                alt={item.alt}
+                fill
+                quality={70}
+                loading="lazy"
+                sizes="(max-width: 860px) 92vw, 24vw"
+              />
+              <span className="visually-hidden">{item.title}</span>
+            </div>
+          ))}
+        </div>
+      ) : null}
+      {boat.videoSrc ? (
+        <article className="boat-video-card" aria-labelledby="boat-video-title">
+          <div className="boat-video-frame">
+            <span className="boat-video-label" id="boat-video-title">
+              {boat.videoTitle ?? "Teknemizi birlikte gezelim"}
+            </span>
+            <video
+              className="boat-video"
+              controls
+              playsInline
+              preload="metadata"
+              poster={boat.videoPoster ?? boat.image}
+            >
+              <source src={boat.videoSrc} type="video/mp4" />
+            </video>
+          </div>
+        </article>
+      ) : null}
     </section>
   );
 }
@@ -607,9 +644,9 @@ export function ContactSection() {
         <nav className="contact-nav" aria-label="Alt menü">
           <Link href="/galeri">Galeri</Link>
           <Link href="/hakkimizda">Hakkımızda</Link>
-          <Link href="/hakkimizda#kaptanlar">Kaptanlar</Link>
           <Link href="/turlar">Turlar</Link>
           <Link href="/rota">Rota</Link>
+          <Link href="/teknemiz">Teknemiz</Link>
           <Link href="/#sss">SSS</Link>
           <Link href="/#iletisim">İletişim</Link>
         </nav>
