@@ -35,6 +35,62 @@ ADMIN_SESSION_SECRET=change-this-long-random-secret
 
 Vercel production ortaminda medya yukleme icin `BLOB_READ_WRITE_TOKEN` tanimli olmalidir.
 
+## VPS'te Docker ile Yayinlama
+
+VPS uzerinde Docker ve Docker Compose kuruluysa siteyi su sekilde yayinlayabilirsiniz:
+
+```bash
+git clone https://github.com/ahmetagsakalli/okan-kaptan-site.git
+cd okan-kaptan-site
+cp .env.production.example .env.production
+```
+
+`.env.production` icindeki degerleri sunucuya gore doldurun:
+
+```bash
+ADMIN_PASSWORD=guclu-admin-sifresi
+ADMIN_SESSION_SECRET=uzun-rastgele-bir-secret
+NEXT_PUBLIC_SITE_URL=https://okankaptan35.com
+```
+
+VPS'te Vercel Blob kullanmak zorunlu degildir. `BLOB_READ_WRITE_TOKEN` bos kalirsa admin panelinden kaydedilen icerikler `data/`, yuklenen medyalar `public/uploads/` volume'lerinde saklanir.
+
+```bash
+docker compose up -d --build
+docker compose ps
+curl -f http://127.0.0.1:3000/api/health
+```
+
+Nginx icin ornek reverse proxy dosyasi:
+
+```bash
+sudo cp deploy/nginx/okan-kaptan.conf /etc/nginx/sites-available/okan-kaptan.conf
+sudo ln -s /etc/nginx/sites-available/okan-kaptan.conf /etc/nginx/sites-enabled/okan-kaptan.conf
+sudo nginx -t
+sudo systemctl reload nginx
+```
+
+SSL icin domain DNS'i VPS'e yonlendikten sonra:
+
+```bash
+sudo certbot --nginx -d okankaptan35.com -d www.okankaptan35.com
+```
+
+Guncelleme komutu:
+
+```bash
+git pull
+docker compose up -d --build
+```
+
+Rollback icin GitHub'daki onceki commit'e donup container'i tekrar kurabilirsiniz:
+
+```bash
+git log --oneline -5
+git checkout <onceki-commit-sha>
+docker compose up -d --build
+```
+
 ## Komutlar
 
 ```bash
