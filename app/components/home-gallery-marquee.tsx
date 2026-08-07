@@ -38,8 +38,9 @@ export function HomeGalleryMarquee({
                   src={item.src}
                   alt={item.alt}
                   fill
-                  quality={72}
+                  quality={60}
                   loading="lazy"
+                  fetchPriority="low"
                   sizes="(max-width: 640px) 76vw, 28vw"
                 />
                 {isVideo ? (

@@ -3,7 +3,7 @@ import { HomeExperience } from "./components/home-experience";
 import { getSiteContent } from "./lib/cms-content";
 import { structuredData } from "./lib/site-data";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 3600;
 
 export default async function Home() {
   const content = await getSiteContent();

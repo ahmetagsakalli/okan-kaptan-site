@@ -63,5 +63,12 @@
     "width": 1672,
     "height": 941,
     "optimized": "public/images/hero-scene.webp"
+  },
+  {
+    "name": "hero-scene-tekkn-boat",
+    "url": "AI-edited from public/images/hero-scene.webp with user-provided boat reference: /Users/ahmetagsakalli/Downloads/tekkn.png",
+    "width": 1672,
+    "height": 941,
+    "optimized": "public/images/hero-scene-tekkn-boat.webp"
   }
 ]

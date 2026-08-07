@@ -17,7 +17,7 @@ const seasonCopy = {
   winter: {
     label: "Kış",
     title: "Olta balıkçılığı",
-    note: "Kışın sakin rota, olta balıkçılığı ve kaptan eşliği.",
+    note: "Kışın sakin rota, olta balıkçılığı.",
     Icon: Snowflake,
   },
 } as const;
@@ -49,11 +49,13 @@ export function SeasonHero({ content, season, onSeasonChange }: SeasonHeroProps)
     >
       <div className="hero-scene-wrap" aria-hidden="true">
         <Image
-          src="/images/hero-scene.webp"
+          src="/images/hero-scene-tekkn-boat.webp"
           alt=""
           fill
           preload
+          decoding="sync"
           fetchPriority="high"
+          quality={68}
           sizes="100vw"
           className="hero-scene"
         />

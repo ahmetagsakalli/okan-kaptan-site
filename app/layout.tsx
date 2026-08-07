@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { FloatingActions } from "./components/floating-actions";
+import { LazyFloatingActions } from "./components/lazy-floating-actions";
 import { ScrollReveal } from "./components/scroll-reveal";
 import "./globals.css";
 
@@ -117,7 +117,7 @@ export default function RootLayout({
       <body>
         <ScrollReveal />
         {children}
-        <FloatingActions />
+        <LazyFloatingActions />
       </body>
     </html>
   );

@@ -120,6 +120,7 @@ a {
   padding: 42px max(24px, calc((100vw - 1240px) / 2)) 58px;
   background: #fbfffe;
   color: var(--sea-deep);
+  contain: layout paint style;
   isolation: isolate;
 }
 
@@ -480,7 +481,7 @@ a {
 
 .hero-title-backdrop {
   position: absolute;
-  top: 19.5%;
+  top: 22.5%;
   left: 50%;
   z-index: 3;
   width: min(1220px, 94vw);
@@ -618,12 +619,12 @@ a {
 
 .hero-winter .hero-note {
   max-width: 320px;
-  border: 1px solid rgba(7, 57, 79, 0.12);
-  border-radius: 8px;
-  padding: 12px 14px;
+  border: 0;
+  border-radius: 0;
+  padding: 0;
   color: #0b3448;
-  background: rgba(246, 252, 255, 0.72);
-  box-shadow: 0 10px 24px rgba(7, 57, 79, 0.08);
+  background: transparent;
+  box-shadow: none;
   text-shadow: none;
 }
 
@@ -709,10 +710,17 @@ a {
 .review-track {
   width: max-content;
   animation: reviews-marquee 42s linear infinite;
+  animation-play-state: paused;
+  will-change: auto;
+}
+
+.google-review-strip.is-visible .review-track {
+  animation-play-state: running;
   will-change: transform;
 }
 
-.google-review-strip:hover .review-track {
+.google-review-strip:hover .review-track,
+.google-review-strip:focus-within .review-track {
   animation-play-state: paused;
 }
 
@@ -817,10 +825,17 @@ a {
   gap: 16px;
   padding-right: 16px;
   animation: gallery-marquee 46s linear infinite;
+  animation-play-state: paused;
+  will-change: auto;
+}
+
+.home-gallery-marquee.is-visible .home-gallery-track {
+  animation-play-state: running;
   will-change: transform;
 }
 
-.home-gallery-marquee:hover .home-gallery-track {
+.home-gallery-marquee:hover .home-gallery-track,
+.home-gallery-marquee:focus-within .home-gallery-track {
   animation-play-state: paused;
 }
 
@@ -932,6 +947,37 @@ a {
 .faq-section,
 .contact-section {
   padding: 92px max(24px, calc((100vw - 1180px) / 2));
+}
+
+@supports (content-visibility: auto) {
+  .google-review-strip,
+  .section,
+  .route-section,
+  .specs-section,
+  .fishing-section,
+  .meal-section,
+  .location-info-section,
+  .season-gallery,
+  .seasonal-activities,
+  .home-gallery-marquee,
+  .social-gallery-section,
+  .about-section,
+  .captains-section,
+  .boat-info-section,
+  .gallery-band,
+  .faq-section,
+  .contact-section {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 720px;
+  }
+
+  .google-review-strip {
+    contain-intrinsic-size: auto 132px;
+  }
+
+  .home-gallery-marquee {
+    contain-intrinsic-size: auto 440px;
+  }
 }
 
 .detail-shell {
@@ -3011,19 +3057,6 @@ a {
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  body.reveal-ready .reveal-item {
-    opacity: 0;
-    transform: translate3d(0, 18px, 0);
-    transition:
-      opacity 420ms ease,
-      transform 520ms cubic-bezier(0.22, 1, 0.36, 1);
-  }
-
-  body.reveal-ready .reveal-item.is-visible {
-    opacity: 1;
-    transform: translate3d(0, 0, 0);
-  }
-
   .music-bubble {
     animation: musicBubbleIn 260ms ease both;
   }
@@ -3045,6 +3078,8 @@ a {
   .review-track,
   .home-gallery-track {
     animation: none;
+    transform: none;
+    will-change: auto;
   }
 }
 
@@ -3094,7 +3129,7 @@ a {
   }
 
   .hero-title-backdrop {
-    top: 20%;
+    top: 22%;
     width: min(900px, 94vw);
     font-size: 2.82rem;
   }
@@ -3246,7 +3281,7 @@ a {
   }
 
   .hero-title-backdrop {
-    top: 25%;
+    top: 26%;
     width: min(620px, 90vw);
     font-size: 2.24rem;
     line-height: 0.86;
@@ -3829,7 +3864,7 @@ a {
   }
 
   .hero-title-backdrop {
-    top: 24%;
+    top: 25.5%;
     width: min(342px, 88vw);
     font-size: 1.96rem;
     line-height: 0.86;

@@ -8,7 +8,7 @@ type GoogleReviewsStripProps = {
 
 export function GoogleReviewsStrip({ reviews = googleReviewHighlights }: GoogleReviewsStripProps) {
   return (
-    <section className="google-review-strip" aria-label="Google yorumları">
+    <section className="google-review-strip reveal-item" aria-label="Google yorumları">
       <a className="google-review-lead" href={googleReviewsUrl} target="_blank" rel="noreferrer">
         <GoogleIcon />
         <span>

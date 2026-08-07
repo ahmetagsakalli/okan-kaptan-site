@@ -3,7 +3,7 @@
 import { usePathname } from "next/navigation";
 import { useEffect } from "react";
 
-const revealSelector = ".reveal-item";
+const revealSelector = ".google-review-strip, .home-gallery-marquee";
 
 export function ScrollReveal() {
   const pathname = usePathname();
@@ -15,8 +15,6 @@ export function ScrollReveal() {
       return;
     }
 
-    document.body.classList.add("reveal-ready");
-
     const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
     if (prefersReducedMotion || !("IntersectionObserver" in window)) {
@@ -26,22 +24,6 @@ export function ScrollReveal() {
 
     const markVisible = (element: HTMLElement) => {
       element.classList.add("is-visible");
-    };
-
-    const revealVisibleElements = () => {
-      elements.forEach((element) => {
-        if (element.classList.contains("is-visible")) {
-          return;
-        }
-
-        const rect = element.getBoundingClientRect();
-        const verticalBuffer = window.innerHeight * 0.8;
-
-        if (rect.top < window.innerHeight + verticalBuffer && rect.bottom > -verticalBuffer) {
-          markVisible(element);
-          observer.unobserve(element);
-        }
-      });
     };
 
     const observer = new IntersectionObserver(
@@ -56,7 +38,7 @@ export function ScrollReveal() {
         });
       },
       {
-        rootMargin: "480px 0px 480px 0px",
+        rootMargin: "320px 0px 320px 0px",
         threshold: 0.01,
       },
     );
@@ -65,13 +47,8 @@ export function ScrollReveal() {
       observer.observe(element);
     });
 
-    requestAnimationFrame(revealVisibleElements);
-    const safetyTimer = window.setTimeout(revealVisibleElements, 350);
-
     return () => {
-      window.clearTimeout(safetyTimer);
       observer.disconnect();
-      document.body.classList.remove("reveal-ready");
     };
   }, [pathname]);
 

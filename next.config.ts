@@ -8,7 +8,7 @@ const nextConfig: NextConfig = {
   images: {
     formats: ["image/avif", "image/webp"],
     minimumCacheTTL: 31_536_000,
-    qualities: [72, 78, 86, 92],
+    qualities: [60, 68, 72, 78, 86, 92],
   },
   outputFileTracingIncludes: {
     "/api/admin/upload": [

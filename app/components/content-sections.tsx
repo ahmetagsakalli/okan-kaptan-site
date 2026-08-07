@@ -63,8 +63,9 @@ export function SeasonalActivitiesSection({ items = services }: ServicesProps) {
                   src={service.image}
                   alt={service.alt}
                   fill
-                  quality={72}
+                  quality={68}
                   loading="lazy"
+                  fetchPriority="low"
                   sizes="(max-width: 860px) 100vw, 42vw"
                 />
               </div>
@@ -101,8 +102,9 @@ export function ServicesSection({ items = services }: ServicesProps) {
                   src={service.image}
                   alt={service.alt}
                   fill
-                  quality={72}
+                  quality={68}
                   loading={index === 0 ? "eager" : "lazy"}
+                  fetchPriority={index === 0 ? "auto" : "low"}
                   sizes="(max-width: 720px) 100vw, 33vw"
                 />
               </div>
@@ -309,8 +311,9 @@ export function CaptainsSection({ items = captains }: CaptainsSectionProps) {
                   src={captain.image}
                   alt={captain.alt}
                   fill
-                  quality={72}
+                  quality={68}
                   loading="lazy"
+                  fetchPriority="low"
                   sizes="(max-width: 860px) 100vw, 34vw"
                   style={{ objectPosition: captain.imagePosition }}
                 />
@@ -368,8 +371,9 @@ export function BoatInfoSection({
             src={boat.image}
             alt={boat.alt}
             fill
-            quality={72}
+            quality={68}
             loading="lazy"
+            fetchPriority="low"
             sizes="(max-width: 860px) 100vw, 42vw"
           />
         </div>
@@ -403,8 +407,9 @@ export function BoatInfoSection({
                 src={item.src}
                 alt={item.alt}
                 fill
-                quality={70}
+                quality={68}
                 loading="lazy"
+                fetchPriority="low"
                 sizes="(max-width: 860px) 92vw, 24vw"
               />
               <span className="visually-hidden">{item.title}</span>

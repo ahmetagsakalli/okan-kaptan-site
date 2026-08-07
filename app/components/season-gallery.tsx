@@ -107,8 +107,9 @@ export function SeasonGallery({
                     src={item.src}
                     alt={item.alt}
                     fill
-                    quality={72}
+                    quality={68}
                     loading={isFeatured && season === "summer" ? "eager" : "lazy"}
+                    fetchPriority={isFeatured && season === "summer" ? "auto" : "low"}
                     sizes={
                       isFeatured
                         ? "(max-width: 860px) 100vw, 48vw"
@@ -218,8 +219,9 @@ export function SocialVideoSection({
                   src={item.image}
                   alt={item.alt}
                   fill
-                  quality={72}
+                  quality={68}
                   loading="lazy"
+                  fetchPriority="low"
                   sizes="(max-width: 860px) 100vw, 42vw"
                 />
                 <span className="social-video-play" aria-hidden="true">

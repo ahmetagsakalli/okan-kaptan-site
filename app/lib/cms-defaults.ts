@@ -11,7 +11,7 @@ export const defaultCmsContent: CmsContent = {
     "winter": {
       "label": "Kış",
       "title": "Olta balıkçılığı",
-      "note": "Kışın sakin rota, olta balıkçılığı ve kaptan eşliği."
+      "note": "Kışın sakin rota, olta balıkçılığı."
     }
   },
   "services": [
