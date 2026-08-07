@@ -1,0 +1,5 @@
+.env*
+.next
+node_modules
+.vercel
+data/admin-settings.json

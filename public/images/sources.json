@@ -1,0 +1,67 @@
+[
+  {
+    "name": "hero-boat",
+    "url": "https://images.unsplash.com/photo-1564166489229-dfb970a591bf?auto=format&fit=crop&fm=jpg&q=82&w=2400",
+    "width": 1920,
+    "height": 1180
+  },
+  {
+    "name": "summer-swim",
+    "url": "https://images.unsplash.com/photo-1564167776935-d9d49beabba5?auto=format&fit=crop&fm=jpg&q=82&w=1800",
+    "width": 1100,
+    "height": 1320
+  },
+  {
+    "name": "winter-fishing",
+    "url": "https://images.unsplash.com/photo-1598855993717-d707289d5abc?auto=format&fit=crop&fm=jpg&q=82&w=1800",
+    "width": 1100,
+    "height": 1320
+  },
+  {
+    "name": "clear-water",
+    "url": "https://images.unsplash.com/photo-1564167776868-cd868ebc6924?auto=format&fit=crop&fm=jpg&q=82&w=1600",
+    "width": 1000,
+    "height": 1000
+  },
+  {
+    "name": "coast-boat",
+    "url": "https://images.unsplash.com/photo-1653070010643-a010c5cefc7b?auto=format&fit=crop&fm=jpg&q=82&w=1800",
+    "width": 1200,
+    "height": 900
+  },
+  {
+    "name": "okan-clear-coast",
+    "width": 1200,
+    "height": 820,
+    "alt": "Mordoğan açıklarında berrak turkuaz deniz ve kıyı manzarası",
+    "url": "Business-provided local source: work/assets/business-originals/IMG_5598.PNG"
+  },
+  {
+    "name": "okan-boat-cove",
+    "width": 1200,
+    "height": 820,
+    "alt": "Okan Kaptan teknesi Mordoğan koyunda yüzme molasında",
+    "url": "Business-provided local source: work/assets/business-originals/IMG_5599.PNG"
+  },
+  {
+    "name": "okan-dining",
+    "width": 1200,
+    "height": 900,
+    "alt": "Okan Kaptan teknesinde yemekli tur için hazırlanmış masalar",
+    "url": "Business-provided local source: work/assets/business-originals/IMG_5596.PNG"
+  },
+  {
+    "name": "okan-sup",
+    "width": 900,
+    "height": 1100,
+    "alt": "Mordoğan turkuaz suyunda ücretsiz SUP kullanan misafir",
+    "url": "Business-provided local source: work/assets/business-originals/IMG_5597.PNG"
+  },
+  {
+    "name": "hero-scene",
+    "url": "AI-generated scenic hero based on user-provided composition reference",
+    "width": 1672,
+    "height": 941,
+    "optimized": "public/images/hero-scene.webp"
+  }
+]
