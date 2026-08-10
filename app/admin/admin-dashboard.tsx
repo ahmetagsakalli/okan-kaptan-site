@@ -2,19 +2,35 @@
 
 import Image from "next/image";
 import {
+  Anchor,
+  Camera,
+  Check,
   CheckCircle2,
+  CircleAlert,
+  ExternalLink,
+  FileText,
+  HelpCircle,
   ImagePlus,
+  Images,
   KeyRound,
   LayoutDashboard,
   LogOut,
+  MapPinned,
+  Menu,
   Plus,
+  RefreshCw,
   Save,
+  Search,
   ShieldCheck,
+  Ship,
   Trash2,
+  UsersRound,
   Video,
+  XCircle,
+  type LucideIcon,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { ChangeEvent, FormEvent, useMemo, useState } from "react";
+import { ChangeEvent, DragEvent, FormEvent, useId, useMemo, useState } from "react";
 import type {
   CmsCaptain,
   CmsContent,
@@ -30,7 +46,7 @@ type AdminDashboardProps = {
   initialContent: CmsContent;
 };
 
-type AdminTab = "hero" | "services" | "gallery" | "captains" | "routeFaq" | "extra" | "settings";
+type AdminTab = "overview" | "hero" | "services" | "gallery" | "captains" | "routeFaq" | "extra" | "settings";
 type TextItemKey = "tourSpecs" | "mealMenu" | "amenityItems" | "fishingTourHighlights";
 type UploadedMedia = {
   url: string;
@@ -38,15 +54,21 @@ type UploadedMedia = {
   size: number;
   contentType: string;
 };
+type Notice = {
+  type: "success" | "error" | "info";
+  text: string;
+  url?: string;
+};
 
-const tabs: { id: AdminTab; label: string }[] = [
-  { id: "hero", label: "Hero" },
-  { id: "services", label: "Turlar" },
-  { id: "gallery", label: "Galeri" },
-  { id: "captains", label: "Kaptanlar" },
-  { id: "routeFaq", label: "Rota & SSS" },
-  { id: "extra", label: "Ek içerikler" },
-  { id: "settings", label: "Ayarlar" },
+const tabs: { id: AdminTab; label: string; description: string; icon: LucideIcon }[] = [
+  { id: "overview", label: "Genel bakış", description: "Özet ve hızlı geçişler", icon: LayoutDashboard },
+  { id: "hero", label: "Hero", description: "Ana sayfa ilk ekranı", icon: Ship },
+  { id: "services", label: "Turlar", description: "Tur kartları ve fotoğrafları", icon: Anchor },
+  { id: "gallery", label: "Galeri", description: "Yaz, kış ve sosyal medya", icon: Images },
+  { id: "captains", label: "Kaptanlar", description: "Kaptan profilleri", icon: UsersRound },
+  { id: "routeFaq", label: "Rota & SSS", description: "Tur akışı ve sorular", icon: MapPinned },
+  { id: "extra", label: "Ek içerikler", description: "Tekne, menü ve notlar", icon: FileText },
+  { id: "settings", label: "Ayarlar", description: "Şifre ve oturum", icon: KeyRound },
 ];
 
 const seasons: { id: CmsSeason; label: string }[] = [
@@ -83,35 +105,96 @@ function makeId(value: string) {
   return slug || `sss-${Date.now()}`;
 }
 
+function formatFileSize(bytes: number) {
+  if (bytes < 1024 * 1024) {
+    return `${Math.max(1, Math.round(bytes / 1024))} KB`;
+  }
+
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function makeMediaTitle(label: string, index: number) {
+  return `${label} ${index}`;
+}
+
+function makeMediaAlt(label: string) {
+  return `Okan Kaptan ${label.toLocaleLowerCase("tr-TR")} fotoğrafı`;
+}
+
+function makeRecentMediaKey(scope: string, title: string) {
+  return `${scope}:${title}`;
+}
+
 export function AdminDashboard({ initialContent }: AdminDashboardProps) {
   const router = useRouter();
   const [content, setContent] = useState<CmsContent>(initialContent);
-  const [activeTab, setActiveTab] = useState<AdminTab>("hero");
-  const [saveMessage, setSaveMessage] = useState("");
+  const [activeTab, setActiveTab] = useState<AdminTab>("overview");
+  const [saveNotice, setSaveNotice] = useState<Notice | null>(null);
+  const [uploadNotice, setUploadNotice] = useState<Notice | null>(null);
+  const [isDirty, setIsDirty] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [uploadingKey, setUploadingKey] = useState("");
+  const [recentlyAddedMediaKey, setRecentlyAddedMediaKey] = useState("");
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [navFilter, setNavFilter] = useState("");
   const [passwordForm, setPasswordForm] = useState({ currentPassword: "", nextPassword: "", repeatPassword: "" });
   const [passwordMessage, setPasswordMessage] = useState("");
   const [isPasswordSaving, setIsPasswordSaving] = useState(false);
 
+  const allGalleryItems = useMemo(
+    () => [...content.galleryCollections.summer.items, ...content.galleryCollections.winter.items],
+    [content.galleryCollections.summer.items, content.galleryCollections.winter.items],
+  );
+
+  const mediaSummary = useMemo(() => {
+    const galleryVideos = allGalleryItems.filter((item) => item.kind === "video").length;
+    const boatVideos = content.boat.videoSrc ? 1 : 0;
+
+    return {
+      total: allGalleryItems.length + content.services.length + content.captains.length + (content.boat.gallery ?? []).length,
+      videos: galleryVideos + boatVideos,
+    };
+  }, [allGalleryItems, content.boat.gallery, content.boat.videoSrc, content.captains.length, content.services.length]);
+
+  const qualitySummary = useMemo(() => {
+    const videoWithoutFile = allGalleryItems.filter((item) => item.kind === "video" && !item.videoSrc).length;
+
+    return { videoWithoutFile };
+  }, [allGalleryItems]);
+
   const stats = useMemo(
     () => [
-      { label: "Galeri öğesi", value: content.galleryCollections.summer.items.length + content.galleryCollections.winter.items.length },
-      { label: "SSS", value: content.faqItems.length },
-      { label: "Kaptan", value: content.captains.length },
-      { label: "Rota adımı", value: content.route.steps.length },
+      { label: "Medya", value: mediaSummary.total, helper: `${mediaSummary.videos} video`, icon: Images },
+      { label: "Tur kartı", value: content.services.length, helper: "Ana sayfa ve turlar", icon: Anchor },
+      { label: "SSS", value: content.faqItems.length, helper: "Rota sayfası", icon: HelpCircle },
+      { label: "Rota adımı", value: content.route.steps.length, helper: "Tur akışı", icon: MapPinned },
     ],
-    [content],
+    [content.faqItems.length, content.route.steps.length, content.services.length, mediaSummary.total, mediaSummary.videos],
   );
+
+  const filteredTabs = useMemo(() => {
+    const filter = navFilter.trim().toLocaleLowerCase("tr-TR");
+
+    if (!filter) {
+      return tabs;
+    }
+
+    return tabs.filter((tab) =>
+      `${tab.label} ${tab.description}`.toLocaleLowerCase("tr-TR").includes(filter),
+    );
+  }, [navFilter]);
+
+  const activeTabMeta = tabs.find((tab) => tab.id === activeTab) ?? tabs[0];
 
   function updateContent(updater: (current: CmsContent) => CmsContent) {
     setContent(updater);
-    setSaveMessage("");
+    setSaveNotice(null);
+    setIsDirty(true);
   }
 
   async function saveContent() {
     setIsSaving(true);
-    setSaveMessage("");
+    setSaveNotice(null);
 
     const response = await fetch("/api/admin/content", {
       method: "PUT",
@@ -121,13 +204,14 @@ export function AdminDashboard({ initialContent }: AdminDashboardProps) {
 
     if (!response.ok) {
       const body = (await response.json().catch(() => null)) as { message?: string } | null;
-      setSaveMessage(body?.message ?? "Kaydetme sırasında hata oluştu.");
+      setSaveNotice({ type: "error", text: body?.message ?? "Kaydetme sırasında hata oluştu." });
       setIsSaving(false);
       return;
     }
 
     setContent((await response.json()) as CmsContent);
-    setSaveMessage("Değişiklikler kaydedildi.");
+    setIsDirty(false);
+    setSaveNotice({ type: "success", text: "Değişiklikler kaydedildi." });
     setIsSaving(false);
     router.refresh();
   }
@@ -178,22 +262,39 @@ export function AdminDashboard({ initialContent }: AdminDashboardProps) {
 
   async function uploadMedia(file: File, key: string) {
     setUploadingKey(key);
+    setUploadNotice(null);
     const formData = new FormData();
     formData.append("file", file);
 
-    const response = await fetch("/api/admin/upload", {
-      method: "POST",
-      body: formData,
-    });
+    try {
+      const response = await fetch("/api/admin/upload", {
+        method: "POST",
+        body: formData,
+      });
 
-    setUploadingKey("");
+      if (!response.ok) {
+        const body = (await response.json().catch(() => null)) as { message?: string } | null;
+        const message = body?.message ?? "Medya yüklenemedi.";
+        setUploadNotice({ type: "error", text: message });
+        throw new Error(message);
+      }
 
-    if (!response.ok) {
-      const body = (await response.json().catch(() => null)) as { message?: string } | null;
-      throw new Error(body?.message ?? "Medya yüklenemedi.");
+      const uploaded = (await response.json()) as UploadedMedia;
+      const uploadedLabel = uploaded.kind === "video" ? "Video" : "Fotoğraf";
+      setUploadNotice({
+        type: "success",
+        text: `${uploadedLabel} yüklendi: ${formatFileSize(uploaded.size)}`,
+        url: uploaded.url,
+      });
+
+      return uploaded;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Medya yüklenemedi.";
+      setUploadNotice({ type: "error", text: message });
+      throw error;
+    } finally {
+      setUploadingKey("");
     }
-
-    return (await response.json()) as UploadedMedia;
   }
 
   function updateService(index: number, patch: Partial<CmsService>) {
@@ -272,25 +373,35 @@ export function AdminDashboard({ initialContent }: AdminDashboardProps) {
     }));
   }
 
-  function addGalleryItem(season: CmsSeason) {
+  function addGalleryItem(season: CmsSeason, kind: CmsGalleryItem["kind"]) {
+    const nextIndex = content.galleryCollections[season].items.length + 1;
+    const itemTitle = makeMediaTitle(kind === "video" ? "Galeri videosu" : "Galeri fotoğrafı", nextIndex);
+    const item: CmsGalleryItem = {
+      kind,
+      title: itemTitle,
+      src: "/images/okan-boat-cove.webp",
+      ...(kind === "video" ? { videoSrc: "" } : {}),
+      alt: makeMediaAlt(kind === "video" ? "galeri videosu kapağı" : "galeri fotoğrafı"),
+    };
+
     updateContent((current) => ({
       ...current,
       galleryCollections: {
         ...current.galleryCollections,
         [season]: {
           ...current.galleryCollections[season],
-          items: [
-            ...current.galleryCollections[season].items,
-            {
-              kind: "photo",
-              title: "Yeni görsel",
-              src: "/images/okan-boat-cove.webp",
-              alt: "Okan Kaptan tur görseli",
-            },
-          ],
+          items: [item, ...current.galleryCollections[season].items],
         },
       },
     }));
+    setRecentlyAddedMediaKey(makeRecentMediaKey(`${season}-gallery`, itemTitle));
+    setSaveNotice({
+      type: "info",
+      text:
+        kind === "video"
+          ? "Yeni video en üste eklendi. Kapak fotoğrafını ve video dosyasını seçip kaydet."
+          : "Yeni fotoğraf en üste eklendi. Fotoğrafı seçip kaydet.",
+    });
   }
 
   function removeGalleryItem(season: CmsSeason, index: number) {
@@ -319,20 +430,23 @@ export function AdminDashboard({ initialContent }: AdminDashboardProps) {
   }
 
   function addBoatGalleryItem() {
+    const nextIndex = (content.boat.gallery ?? []).length + 1;
+    const itemTitle = makeMediaTitle("Tekne fotoğrafı", nextIndex);
+    const item = {
+      title: itemTitle,
+      src: content.boat.image || "/images/okan-boat-real-wide.webp",
+      alt: makeMediaAlt("tekne fotoğrafı"),
+    };
+
     updateContent((current) => ({
       ...current,
       boat: {
         ...current.boat,
-        gallery: [
-          ...(current.boat.gallery ?? []),
-          {
-            title: "Yeni tekne görseli",
-            src: current.boat.image || "/images/okan-boat-real-wide.webp",
-            alt: "Okan Kaptan tekne görseli",
-          },
-        ],
+        gallery: [item, ...(current.boat.gallery ?? [])],
       },
     }));
+    setRecentlyAddedMediaKey(makeRecentMediaKey("boat-gallery", itemTitle));
+    setSaveNotice({ type: "info", text: "Yeni tekne fotoğrafı en üste eklendi. Fotoğrafı seçip kaydet." });
   }
 
   function removeBoatGalleryItem(index: number) {
@@ -347,56 +461,122 @@ export function AdminDashboard({ initialContent }: AdminDashboardProps) {
 
   return (
     <main className="admin-shell">
-      <header className="admin-topbar">
-        <div>
-          <span className="admin-eyebrow">
-            <ShieldCheck size={16} aria-hidden="true" />
-            Güvenli oturum
-          </span>
-          <h1>Okan Kaptan Yönetim Paneli</h1>
-          <p>Site içerikleri, rota, SSS, görseller ve videolar buradan düzenlenir.</p>
-        </div>
-        <div className="admin-topbar-actions">
-          <a href="/" target="_blank" rel="noreferrer">
-            Siteyi aç
-          </a>
-          <button type="button" onClick={logout}>
-            <LogOut size={18} aria-hidden="true" />
-            Çıkış
-          </button>
-        </div>
-      </header>
+      <button
+        className={`admin-sidebar-backdrop ${isSidebarOpen ? "is-open" : ""}`}
+        type="button"
+        aria-label="Menüyü kapat"
+        onClick={() => setIsSidebarOpen(false)}
+      />
 
-      <section className="admin-stat-grid" aria-label="Panel özeti">
-        {stats.map((stat) => (
-          <article className="admin-stat-card" key={stat.label}>
-            <span>{stat.label}</span>
-            <strong>{stat.value}</strong>
-          </article>
-        ))}
-      </section>
-
-      <div className="admin-workspace">
-        <aside className="admin-sidebar">
-          <span className="admin-sidebar-title">
-            <LayoutDashboard size={18} aria-hidden="true" />
-            Bölümler
+      <aside className={`admin-sidebar ${isSidebarOpen ? "is-open" : ""}`}>
+        <div className="admin-sidebar-brand">
+          <span className="admin-brand-mark" aria-hidden="true">
+            <Ship size={24} />
           </span>
-          <nav aria-label="Admin bölümleri">
-            {tabs.map((tab) => (
+          <div>
+            <strong>Okan Kaptan</strong>
+            <span>Site yönetimi</span>
+          </div>
+        </div>
+
+        <label className="admin-sidebar-search">
+          <Search size={16} aria-hidden="true" />
+          <input
+            value={navFilter}
+            placeholder="Bölüm ara"
+            onChange={(event) => setNavFilter(event.target.value)}
+          />
+        </label>
+
+        <nav aria-label="Admin bölümleri">
+          <span className="admin-sidebar-title">İçerik</span>
+          {filteredTabs.map((tab) => {
+            const Icon = tab.icon;
+
+            return (
               <button
                 className={activeTab === tab.id ? "is-active" : ""}
                 key={tab.id}
                 type="button"
-                onClick={() => setActiveTab(tab.id)}
+                onClick={() => {
+                  setActiveTab(tab.id);
+                  setIsSidebarOpen(false);
+                }}
               >
-                {tab.label}
+                <Icon size={19} aria-hidden="true" />
+                <span>
+                  <strong>{tab.label}</strong>
+                  <small>{tab.description}</small>
+                </span>
               </button>
-            ))}
-          </nav>
-        </aside>
+            );
+          })}
+        </nav>
+
+        <div className="admin-sidebar-footer">
+          <span className={isDirty ? "is-dirty" : ""}>{isDirty ? "Kaydedilmemiş değişiklik var" : "İçerik kayıtlı"}</span>
+        </div>
+      </aside>
+
+      <section className="admin-main">
+        <header className="admin-topbar">
+          <button className="admin-menu-button" type="button" onClick={() => setIsSidebarOpen(true)}>
+            <Menu size={21} aria-hidden="true" />
+            <span>Menü</span>
+          </button>
+
+          <div className="admin-topbar-title">
+            <span className="admin-eyebrow">
+              <ShieldCheck size={16} aria-hidden="true" />
+              Güvenli oturum
+            </span>
+            <h1>{activeTabMeta.label}</h1>
+            <p>{activeTabMeta.description}</p>
+          </div>
+
+          <div className="admin-topbar-actions">
+            <a href="/" target="_blank" rel="noreferrer">
+              <ExternalLink size={17} aria-hidden="true" />
+              Site
+            </a>
+            <button type="button" onClick={logout}>
+              <LogOut size={18} aria-hidden="true" />
+              Çıkış
+            </button>
+          </div>
+        </header>
+
+        <section className="admin-stat-grid" aria-label="Panel özeti">
+          {stats.map((stat) => {
+            const Icon = stat.icon;
+
+            return (
+              <article className="admin-stat-card" key={stat.label}>
+                <span className="admin-stat-icon">
+                  <Icon size={20} aria-hidden="true" />
+                </span>
+                <div>
+                  <strong>{stat.value}</strong>
+                  <span>{stat.label}</span>
+                  <small>{stat.helper}</small>
+                </div>
+              </article>
+            );
+          })}
+        </section>
 
         <section className="admin-editor-panel">
+          {activeTab === "overview" ? (
+            <OverviewPanel
+              isDirty={isDirty}
+              mediaSummary={mediaSummary}
+              qualitySummary={qualitySummary}
+              uploadNotice={uploadNotice}
+              onOpenTab={setActiveTab}
+              onSave={saveContent}
+              isSaving={isSaving}
+            />
+          ) : null}
           {activeTab === "hero" ? (
             <Panel title="Hero alanı" description="Ana sayfa ilk ekranındaki başlık ve mevsim metinleri.">
               <Field label="Ana başlık">
@@ -463,13 +643,18 @@ export function AdminDashboard({ initialContent }: AdminDashboardProps) {
                       onChange={(image) => updateService(index, { image })}
                     />
                     <Field label="Başlık">
-                      <input value={service.title} onChange={(event) => updateService(index, { title: event.target.value })} />
+                      <input
+                        value={service.title}
+                        onChange={(event) =>
+                          updateService(index, {
+                            title: event.target.value,
+                            alt: makeMediaAlt(event.target.value || "tur"),
+                          })
+                        }
+                      />
                     </Field>
                     <Field label="Açıklama">
                       <textarea rows={4} value={service.text} onChange={(event) => updateService(index, { text: event.target.value })} />
-                    </Field>
-                    <Field label="Görsel alt metni">
-                      <input value={service.alt} onChange={(event) => updateService(index, { alt: event.target.value })} />
                     </Field>
                   </article>
                 ))}
@@ -478,14 +663,21 @@ export function AdminDashboard({ initialContent }: AdminDashboardProps) {
           ) : null}
 
           {activeTab === "gallery" ? (
-            <Panel title="Galeri" description="Yaz ve kış galerisi ayrı ayrı düzenlenir. Görseller WebP olarak optimize edilir; videolar direkt yüklenir.">
+            <Panel title="Galeri" description="Yaz ve kış fotoğrafları ayrı ayrı düzenlenir.">
               {seasons.map((season) => (
                 <div className="admin-season-block" key={season.id}>
                   <div className="admin-section-row">
                     <h3>{season.label} galerisi</h3>
-                    <button type="button" onClick={() => addGalleryItem(season.id)}>
-                      Medya ekle
-                    </button>
+                    <div className="admin-action-group">
+                      <button type="button" onClick={() => addGalleryItem(season.id, "photo")}>
+                        <ImagePlus size={16} aria-hidden="true" />
+                        Fotoğraf ekle
+                      </button>
+                      <button type="button" onClick={() => addGalleryItem(season.id, "video")}>
+                        <Video size={16} aria-hidden="true" />
+                        Video ekle
+                      </button>
+                    </div>
                   </div>
                   <Field label="Galeri açıklaması">
                     <textarea
@@ -506,8 +698,19 @@ export function AdminDashboard({ initialContent }: AdminDashboardProps) {
                     />
                   </Field>
                   <div className="admin-repeat-grid">
-                    {content.galleryCollections[season.id].items.map((item, index) => (
-                      <article className="admin-edit-card" key={`${season.id}-${item.title}-${index}`}>
+                    {content.galleryCollections[season.id].items.map((item, index) => {
+                      const mediaKey = makeRecentMediaKey(`${season.id}-gallery`, item.title);
+                      const isNew = recentlyAddedMediaKey === mediaKey;
+
+                      return (
+                      <article className={`admin-edit-card ${isNew ? "is-new" : ""}`} key={mediaKey}>
+                        <div className="admin-media-card-header">
+                          <div>
+                            <strong>{item.kind === "video" ? "Video" : "Fotoğraf"} {index + 1}</strong>
+                            <span>{item.kind === "video" ? "Kapak + video dosyası" : "Fotoğraf"}</span>
+                          </div>
+                          {isNew ? <span className="admin-new-badge">Yeni eklendi</span> : null}
+                        </div>
                         <MediaField
                           value={item.src}
                           alt={item.alt}
@@ -515,6 +718,8 @@ export function AdminDashboard({ initialContent }: AdminDashboardProps) {
                           uploadingKey={uploadingKey}
                           onUpload={uploadMedia}
                           onChange={(src) => updateGalleryItem(season.id, index, { src })}
+                          buttonLabel={item.kind === "video" ? "Kapak fotoğrafı seç" : "Fotoğraf seç"}
+                          emptyLabel={item.kind === "video" ? "Kapak fotoğrafı seçilmedi" : "Fotoğraf seçilmedi"}
                         />
                         {item.kind === "video" ? (
                           <MediaField
@@ -528,37 +733,16 @@ export function AdminDashboard({ initialContent }: AdminDashboardProps) {
                             accept="video/mp4,video/webm,video/quicktime"
                             buttonLabel="Video seç"
                             emptyLabel="Video dosyası seçilmedi"
-                            helpText="MP4, WebM veya MOV seçebilirsin. Galeride kapak görseli üstünden açılır."
+                            helpText="MP4, WebM veya MOV yükle."
                           />
                         ) : null}
-                        <Field label="Başlık">
-                          <input value={item.title} onChange={(event) => updateGalleryItem(season.id, index, { title: event.target.value })} />
-                        </Field>
-                        <Field label="Alt metin">
-                          <input value={item.alt} onChange={(event) => updateGalleryItem(season.id, index, { alt: event.target.value })} />
-                        </Field>
-                        <div className="admin-inline-controls">
-                          <select
-                            value={item.kind}
-                            onChange={(event) => updateGalleryItem(season.id, index, { kind: event.target.value as CmsGalleryItem["kind"] })}
-                          >
-                            <option value="photo">Fotoğraf</option>
-                            <option value="video">Video</option>
-                          </select>
-                          <label className="admin-check">
-                            <input
-                              type="checkbox"
-                              checked={item.featured === true}
-                              onChange={(event) => updateGalleryItem(season.id, index, { featured: event.target.checked })}
-                            />
-                            Öne çıkar
-                          </label>
-                        </div>
                         <button className="admin-danger" type="button" onClick={() => removeGalleryItem(season.id, index)}>
-                          Sil
+                          <Trash2 size={16} aria-hidden="true" />
+                          Bu medyayı sil
                         </button>
                       </article>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               ))}
@@ -604,8 +788,8 @@ export function AdminDashboard({ initialContent }: AdminDashboardProps) {
                           ),
                         }))
                       }
-                    />
-                    <Field label="Platform">
+	                    />
+	                    <Field label="Platform">
                       <select
                         value={item.platform}
                         onChange={(event) =>
@@ -622,20 +806,22 @@ export function AdminDashboard({ initialContent }: AdminDashboardProps) {
                         <option value="Instagram">Instagram</option>
                         <option value="Facebook">Facebook</option>
                       </select>
-                    </Field>
-                    <Field label="Başlık">
-                      <input
-                        value={item.title}
-                        onChange={(event) =>
-                          updateContent((current) => ({
-                            ...current,
-                            socialGalleryItems: current.socialGalleryItems.map((social, socialIndex) =>
-                              socialIndex === index ? { ...social, title: event.target.value } : social,
-                            ),
-                          }))
-                        }
-                      />
-                    </Field>
+	                    </Field>
+	                    <Field label="Paylaşım adı">
+	                      <input
+	                        value={item.title}
+	                        onChange={(event) =>
+	                          updateContent((current) => ({
+	                            ...current,
+	                            socialGalleryItems: current.socialGalleryItems.map((social, socialIndex) =>
+	                              socialIndex === index
+                                  ? { ...social, title: event.target.value, alt: makeMediaAlt(event.target.value || "sosyal video kapağı") }
+                                  : social,
+	                            ),
+	                          }))
+	                        }
+	                      />
+	                    </Field>
                     <Field label="Bağlantı">
                       <input
                         value={item.href}
@@ -646,23 +832,10 @@ export function AdminDashboard({ initialContent }: AdminDashboardProps) {
                               socialIndex === index ? { ...social, href: event.target.value } : social,
                             ),
                           }))
-                        }
-                      />
-                    </Field>
-                    <Field label="Kapak alt metni">
-                      <input
-                        value={item.alt}
-                        onChange={(event) =>
-                          updateContent((current) => ({
-                            ...current,
-                            socialGalleryItems: current.socialGalleryItems.map((social, socialIndex) =>
-                              socialIndex === index ? { ...social, alt: event.target.value } : social,
-                            ),
-                          }))
-                        }
-                      />
-                    </Field>
-                    <button
+	                        }
+	                      />
+	                    </Field>
+	                    <button
                       className="admin-danger"
                       type="button"
                       onClick={() =>
@@ -683,7 +856,7 @@ export function AdminDashboard({ initialContent }: AdminDashboardProps) {
           ) : null}
 
           {activeTab === "captains" ? (
-            <Panel title="Kaptanlar" description="Kaptan görselleri ve uzun biyografi metinleri. Paragrafları boş satırla ayır.">
+            <Panel title="Kaptanlar" description="Kaptan fotoğrafları ve uzun biyografi metinleri. Paragrafları boş satırla ayır.">
               <div className="admin-repeat-grid">
                 {content.captains.map((captain, index) => (
                   <article className="admin-edit-card is-wide" key={captain.name}>
@@ -694,16 +867,18 @@ export function AdminDashboard({ initialContent }: AdminDashboardProps) {
                       uploadingKey={uploadingKey}
                       onUpload={uploadMedia}
                       onChange={(image) => updateCaptain(index, { image })}
-                    />
-                    <Field label="İsim">
-                      <input value={captain.name} onChange={(event) => updateCaptain(index, { name: event.target.value })} />
-                    </Field>
-                    <Field label="Görsel pozisyonu">
-                      <input value={captain.imagePosition} onChange={(event) => updateCaptain(index, { imagePosition: event.target.value })} />
-                    </Field>
-                    <Field label="Görsel alt metni">
-                      <input value={captain.alt} onChange={(event) => updateCaptain(index, { alt: event.target.value })} />
-                    </Field>
+	                    />
+	                    <Field label="İsim">
+	                      <input
+                          value={captain.name}
+                          onChange={(event) =>
+                            updateCaptain(index, {
+                              name: event.target.value,
+                              alt: makeMediaAlt(event.target.value || "kaptan"),
+                            })
+                          }
+                        />
+	                    </Field>
                     <Field label="Biyografi">
                       <textarea
                         rows={12}
@@ -919,15 +1094,15 @@ export function AdminDashboard({ initialContent }: AdminDashboardProps) {
                   </Field>
                   <MediaField
                     value={content.boat.videoPoster ?? ""}
-                    alt="Tekne video kapak görseli"
+	                    alt="Tekne video kapak fotoğrafı"
                     uploadKey="boat-video-poster"
                     uploadingKey={uploadingKey}
                     onUpload={uploadMedia}
                     onChange={(videoPoster) =>
                       updateContent((current) => ({ ...current, boat: { ...current.boat, videoPoster } }))
                     }
-                    emptyLabel="Video kapağı seçilmedi"
-                    buttonLabel="Kapak görseli seç"
+	                    emptyLabel="Kapak fotoğrafı seçilmedi"
+	                    buttonLabel="Kapak fotoğrafı seç"
                   />
                 </div>
                 <MediaField
@@ -943,46 +1118,52 @@ export function AdminDashboard({ initialContent }: AdminDashboardProps) {
                   accept="video/mp4,video/webm,video/quicktime"
                   buttonLabel="Tekne videosu seç"
                   emptyLabel="Tekne videosu seçilmedi"
-                  helpText="MP4, WebM veya MOV yükleyebilirsin. Video sayfada kapak görseliyle gösterilir."
+                  helpText="MP4, WebM veya MOV yükle."
                 />
                 <div className="admin-season-block">
                   <div className="admin-section-row">
                     <h3>Tekne galerisi</h3>
-                    <button type="button" onClick={addBoatGalleryItem}>
-                      <Plus size={16} aria-hidden="true" />
-                      Görsel ekle
-                    </button>
+	                    <button type="button" onClick={addBoatGalleryItem}>
+	                      <Plus size={16} aria-hidden="true" />
+	                      Fotoğraf ekle
+	                    </button>
                   </div>
-                  <div className="admin-repeat-grid">
-                    {(content.boat.gallery ?? []).map((item, index) => (
-                      <article className="admin-edit-card" key={`${item.src}-${index}`}>
-                        <MediaField
-                          value={item.src}
-                          alt={item.alt}
-                          uploadKey={`boat-gallery-${index}`}
-                          uploadingKey={uploadingKey}
-                          onUpload={uploadMedia}
-                          onChange={(src) => updateBoatGalleryItem(index, { src })}
-                        />
-                        <Field label="Başlık">
-                          <input
-                            value={item.title}
-                            onChange={(event) => updateBoatGalleryItem(index, { title: event.target.value })}
-                          />
-                        </Field>
-                        <Field label="Alt metin">
-                          <input
-                            value={item.alt}
-                            onChange={(event) => updateBoatGalleryItem(index, { alt: event.target.value })}
-                          />
-                        </Field>
-                        <button className="admin-danger" type="button" onClick={() => removeBoatGalleryItem(index)}>
-                          <Trash2 size={16} aria-hidden="true" />
-                          Sil
-                        </button>
-                      </article>
-                    ))}
-                  </div>
+		                  <div className="admin-repeat-grid">
+		                    {(content.boat.gallery ?? []).map((item, index) => {
+                          const mediaKey = makeRecentMediaKey("boat-gallery", item.title);
+                          const isNew = recentlyAddedMediaKey === mediaKey;
+
+                          return (
+		                      <article className={`admin-edit-card ${isNew ? "is-new" : ""}`} key={mediaKey}>
+		                        <div className="admin-media-card-header">
+                              <div>
+		                            <strong>Tekne fotoğrafı {index + 1}</strong>
+		                            <span>Fotoğraf</span>
+                              </div>
+                              {isNew ? <span className="admin-new-badge">Yeni eklendi</span> : null}
+		                        </div>
+		                        <MediaField
+		                          value={item.src}
+		                          alt={item.alt}
+	                          uploadKey={`boat-gallery-${index}`}
+	                          uploadingKey={uploadingKey}
+	                          onUpload={uploadMedia}
+	                          onChange={(src) =>
+                              updateBoatGalleryItem(index, {
+                                src,
+                                title: makeMediaTitle("Tekne fotoğrafı", index + 1),
+                                alt: makeMediaAlt("tekne fotoğrafı"),
+                              })
+                            }
+	                        />
+	                        <button className="admin-danger" type="button" onClick={() => removeBoatGalleryItem(index)}>
+		                          <Trash2 size={16} aria-hidden="true" />
+		                          Bu fotoğrafı sil
+		                        </button>
+		                      </article>
+                          );
+                        })}
+	                  </div>
                 </div>
               </div>
               <EditableTextItems
@@ -1114,15 +1295,12 @@ export function AdminDashboard({ initialContent }: AdminDashboardProps) {
           ) : null}
 
           {activeTab !== "settings" ? (
-            <div className="admin-savebar">
-              {saveMessage ? (
-                <span className={saveMessage.includes("kaydedildi") ? "is-success" : "is-error"}>
-                  {saveMessage.includes("kaydedildi") ? <CheckCircle2 size={18} aria-hidden="true" /> : null}
-                  {saveMessage}
-                </span>
-              ) : (
-                <span>Değişikliklerden sonra kaydetmeyi unutma.</span>
-              )}
+            <div className={`admin-savebar ${isDirty ? "is-dirty" : ""}`}>
+              <span className={saveNotice ? `is-${saveNotice.type}` : ""}>
+                {saveNotice?.type === "success" ? <CheckCircle2 size={18} aria-hidden="true" /> : null}
+                {saveNotice?.type === "error" ? <XCircle size={18} aria-hidden="true" /> : null}
+                {saveNotice?.text ?? (isDirty ? "Kaydedilmemiş değişiklik var." : "Tüm değişiklikler kayıtlı.")}
+              </span>
               <button type="button" onClick={saveContent} disabled={isSaving}>
                 <Save size={18} aria-hidden="true" />
                 {isSaving ? "Kaydediliyor..." : "Değişiklikleri kaydet"}
@@ -1130,8 +1308,101 @@ export function AdminDashboard({ initialContent }: AdminDashboardProps) {
             </div>
           ) : null}
         </section>
-      </div>
+      </section>
     </main>
+  );
+}
+
+function OverviewPanel({
+  isDirty,
+  mediaSummary,
+  qualitySummary,
+  uploadNotice,
+  onOpenTab,
+  onSave,
+  isSaving,
+}: {
+  isDirty: boolean;
+  mediaSummary: { total: number; videos: number };
+  qualitySummary: { videoWithoutFile: number };
+  uploadNotice: Notice | null;
+  onOpenTab: (tab: AdminTab) => void;
+  onSave: () => void;
+  isSaving: boolean;
+}) {
+  const quickActions: { title: string; text: string; tab: AdminTab; icon: LucideIcon }[] = [
+    { title: "Tur kartları", text: "Ana sayfa ve turlar fotoğrafları", tab: "services", icon: Anchor },
+    { title: "Galeri", text: "Yaz, kış, video ve sosyal bağlantılar", tab: "gallery", icon: Images },
+    { title: "Tekne içerikleri", text: "Tekne fotoğrafları, video ve donanım", tab: "extra", icon: Ship },
+    { title: "Rota & SSS", text: "Saat akışı, koylar ve sorular", tab: "routeFaq", icon: HelpCircle },
+  ];
+
+  return (
+    <Panel title="Panel özeti" description="En çok kullanılan düzenleme alanları ve son sistem durumu.">
+      <div className="admin-overview-grid">
+        <article className="admin-overview-card is-primary">
+          <span className="admin-overview-icon" aria-hidden="true">
+            {isDirty ? <CircleAlert size={24} /> : <CheckCircle2 size={24} />}
+          </span>
+          <div>
+            <h3>{isDirty ? "Kaydedilmemiş değişiklik var" : "İçerik kayıtlı"}</h3>
+            <p>{isDirty ? "Yaptığın değişiklikleri yayına almak için kaydet." : "Son kaydedilen içerik yayında."}</p>
+          </div>
+          <button type="button" onClick={onSave} disabled={!isDirty || isSaving}>
+            <Save size={18} aria-hidden="true" />
+            {isSaving ? "Kaydediliyor..." : "Kaydet"}
+          </button>
+        </article>
+
+        <article className="admin-overview-card">
+          <span className="admin-overview-icon" aria-hidden="true">
+            <Camera size={24} />
+          </span>
+          <div>
+            <h3>{mediaSummary.total} medya alanı</h3>
+            <p>{mediaSummary.videos} video alanı bağlı. Fotoğraflar yüklenince otomatik hazırlanır.</p>
+          </div>
+        </article>
+
+        <article className="admin-overview-card">
+          <span className="admin-overview-icon" aria-hidden="true">
+            <FileText size={24} />
+          </span>
+          <div>
+            <h3>İçerik kontrolü</h3>
+            <p>
+              {qualitySummary.videoWithoutFile
+                ? `${qualitySummary.videoWithoutFile} video için dosya seçilmemiş.`
+                : "Fotoğraf ve video alanları tamam görünüyor."}
+            </p>
+          </div>
+        </article>
+      </div>
+
+      {uploadNotice ? (
+        <div className={`admin-system-notice is-${uploadNotice.type}`}>
+          {uploadNotice.type === "success" ? <CheckCircle2 size={18} aria-hidden="true" /> : <XCircle size={18} aria-hidden="true" />}
+          <span>{uploadNotice.text}</span>
+          {uploadNotice.url ? <code>{uploadNotice.url}</code> : null}
+        </div>
+      ) : null}
+
+      <div className="admin-quick-grid">
+        {quickActions.map((action) => {
+          const Icon = action.icon;
+
+          return (
+            <button className="admin-quick-card" key={action.tab} type="button" onClick={() => onOpenTab(action.tab)}>
+              <span aria-hidden="true">
+                <Icon size={21} />
+              </span>
+              <strong>{action.title}</strong>
+              <small>{action.text}</small>
+            </button>
+          );
+        })}
+      </div>
+    </Panel>
   );
 }
 
@@ -1164,7 +1435,7 @@ function MediaField({
   onUpload,
   onChange,
   preview = "image",
-  accept = "image/jpeg,image/png,image/webp",
+  accept = "image/jpeg,image/jpg,image/png,image/webp",
   buttonLabel,
   emptyLabel,
   helpText,
@@ -1181,56 +1452,92 @@ function MediaField({
   emptyLabel?: string;
   helpText?: string;
 }) {
+  const inputId = useId();
   const isVideo = preview === "video";
   const UploadIcon = isVideo ? Video : ImagePlus;
+  const isUploading = uploadingKey === uploadKey;
+  const actionLabel = buttonLabel ?? (isVideo ? "Video seç" : "Fotoğraf seç");
+  const [isDragging, setIsDragging] = useState(false);
+  const [notice, setNotice] = useState<Notice | null>(null);
 
-  async function onFileChange(event: ChangeEvent<HTMLInputElement>) {
-    const file = event.target.files?.[0];
-
+  async function handleFile(file?: File) {
     if (!file) {
       return;
     }
 
+    setNotice(null);
+
     try {
       const uploaded = await onUpload(file, uploadKey);
       onChange(uploaded.url);
+      setNotice({
+        type: "success",
+        text: `${uploaded.kind === "video" ? "Video" : "Fotoğraf"} yüklendi (${formatFileSize(uploaded.size)}).`,
+      });
     } catch (error) {
-      alert(error instanceof Error ? error.message : "Medya yüklenemedi.");
-    } finally {
-      event.target.value = "";
+      setNotice({
+        type: "error",
+        text: error instanceof Error ? error.message : "Medya yüklenemedi.",
+      });
     }
+  }
+
+  async function onFileChange(event: ChangeEvent<HTMLInputElement>) {
+    await handleFile(event.target.files?.[0]);
+    event.target.value = "";
+  }
+
+  function onDrop(event: DragEvent<HTMLDivElement>) {
+    event.preventDefault();
+    setIsDragging(false);
+
+    if (isUploading) {
+      return;
+    }
+
+    void handleFile(event.dataTransfer.files?.[0]);
   }
 
   return (
     <div className="admin-media-field">
-      <div className={`admin-media-preview ${value ? "" : "is-empty"} ${isVideo ? "is-video" : ""}`}>
-        {value ? (
-          isVideo ? (
-            <video className="admin-media-video-preview" src={value} controls preload="metadata" />
+      <div
+        className={`admin-media-picker ${isDragging ? "is-dragging" : ""} ${isUploading ? "is-uploading" : ""}`}
+        onDragEnter={(event) => {
+          event.preventDefault();
+          setIsDragging(true);
+        }}
+        onDragOver={(event) => event.preventDefault()}
+        onDragLeave={() => setIsDragging(false)}
+        onDrop={onDrop}
+      >
+        <div className={`admin-media-preview ${value ? "" : "is-empty"} ${isVideo ? "is-video" : ""}`}>
+          {value ? (
+            isVideo ? (
+              <video className="admin-media-video-preview" src={value} controls preload="metadata" />
+            ) : (
+              <Image src={value} alt={alt || "Admin fotoğraf önizlemesi"} fill sizes="220px" />
+            )
           ) : (
-            <Image src={value} alt={alt || "Admin görsel önizlemesi"} fill sizes="220px" />
-          )
-        ) : (
-          <span>{emptyLabel ?? (isVideo ? "Video seçilmedi" : "Görsel seçilmedi")}</span>
-        )}
+            <span>{emptyLabel ?? (isVideo ? "Video seçilmedi" : "Fotoğraf seçilmedi")}</span>
+          )}
+        </div>
+
+        <label className="admin-upload-pill" htmlFor={inputId}>
+          <span aria-hidden="true">
+            {isUploading ? <RefreshCw size={16} /> : <UploadIcon size={16} />}
+          </span>
+          <strong>{isUploading ? "Yükleniyor" : value ? "Değiştir" : actionLabel}</strong>
+          <input id={inputId} type="file" accept={accept} disabled={isUploading} onChange={onFileChange} />
+        </label>
       </div>
-      <label className="admin-upload-button">
-        <UploadIcon size={18} aria-hidden="true" />
-        <span>
-          <strong>{uploadingKey === uploadKey ? "Yükleniyor..." : buttonLabel ?? "Fotoğraf seç"}</strong>
-          <small>{helpText ?? "JPG, PNG veya WebP seç; sistem otomatik küçültür."}</small>
-        </span>
-        <input type="file" accept={accept} disabled={uploadingKey === uploadKey} onChange={onFileChange} />
-      </label>
-      <details className="admin-advanced-field">
-        <summary>{isVideo ? "Video yolunu elle yaz" : "Görsel yolunu elle yaz"}</summary>
-        <input
-          value={value}
-          aria-label={isVideo ? "Video yolu" : "Görsel yolu"}
-          onChange={(event) => onChange(event.target.value)}
-        />
-      </details>
-      <p className="admin-media-help">Mevcut medya: {value || "Henüz seçilmedi"}</p>
+
+      {notice ? (
+        <p className={`admin-media-notice is-${notice.type}`}>
+          {notice.type === "success" ? <Check size={16} aria-hidden="true" /> : <XCircle size={16} aria-hidden="true" />}
+          {notice.text}
+        </p>
+      ) : null}
+      {helpText ? <p className="admin-media-help">{helpText}</p> : null}
     </div>
   );
 }

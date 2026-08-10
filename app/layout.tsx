@@ -70,8 +70,8 @@ export const metadata: Metadata = {
     images: ["/og.png"],
   },
   icons: {
-    icon: [{ url: "/icon.png", type: "image/png", sizes: "96x96" }],
-    apple: [{ url: "/apple-icon.png", type: "image/png", sizes: "180x180" }],
+    icon: [{ url: "/icon.png?v=2", type: "image/png", sizes: "96x96" }],
+    apple: [{ url: "/apple-icon.png?v=2", type: "image/png", sizes: "180x180" }],
   },
   appleWebApp: {
     capable: true,

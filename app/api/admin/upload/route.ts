@@ -8,13 +8,37 @@ export const runtime = "nodejs";
 
 const maxImageUploadBytes = 8 * 1024 * 1024;
 const maxVideoUploadBytes = 120 * 1024 * 1024;
-const allowedImageTypes = new Set(["image/jpeg", "image/png", "image/webp"]);
+const allowedImageTypes = new Set(["image/jpeg", "image/jpg", "image/png", "image/webp"]);
 const allowedVideoTypes = new Set(["video/mp4", "video/webm", "video/quicktime"]);
 const videoExtensions = new Map([
   ["video/mp4", "mp4"],
   ["video/webm", "webm"],
   ["video/quicktime", "mov"],
 ]);
+const imageExtensions = new Set(["jpg", "jpeg", "png", "webp"]);
+const videoFileExtensions = new Set(["mp4", "webm", "mov"]);
+
+function getFileExtension(name: string) {
+  return name.split(".").pop()?.toLowerCase() ?? "";
+}
+
+function getUploadKind(file: File) {
+  const extension = getFileExtension(file.name);
+
+  if (allowedImageTypes.has(file.type) || imageExtensions.has(extension)) {
+    return "image";
+  }
+
+  if (allowedVideoTypes.has(file.type) || videoFileExtensions.has(extension)) {
+    return "video";
+  }
+
+  return null;
+}
+
+function getVideoExtension(file: File) {
+  return videoExtensions.get(file.type) ?? (getFileExtension(file.name) || "mp4");
+}
 
 function slugifyFilename(name: string) {
   return name
@@ -39,8 +63,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ message: "Medya dosyası bulunamadı." }, { status: 400 });
   }
 
-  const isImage = allowedImageTypes.has(file.type);
-  const isVideo = allowedVideoTypes.has(file.type);
+  const uploadKind = getUploadKind(file);
+  const isImage = uploadKind === "image";
+  const isVideo = uploadKind === "video";
 
   if (!isImage && !isVideo) {
     return NextResponse.json(
@@ -91,17 +116,18 @@ export async function POST(request: NextRequest) {
     });
   }
 
-  const extension = videoExtensions.get(file.type) ?? "mp4";
+  const extension = getVideoExtension(file);
   const filename = `${Date.now()}-${slugifyFilename(file.name) || "video"}.${extension}`;
   const blobPathname = `uploads/${filename}`;
   const outputPath = path.join(uploadDir, filename);
+  const contentType = file.type || `video/${extension === "mov" ? "quicktime" : extension}`;
 
-  if (await writePrivateBlobBytes(blobPathname, bytes, file.type)) {
+  if (await writePrivateBlobBytes(blobPathname, bytes, contentType)) {
     return NextResponse.json({
       url: `/api/media/${blobPathname}`,
       size: bytes.byteLength,
       kind: "video",
-      contentType: file.type,
+      contentType,
     });
   }
 
@@ -112,6 +138,6 @@ export async function POST(request: NextRequest) {
     url: `/uploads/${filename}`,
     size: bytes.byteLength,
     kind: "video",
-    contentType: file.type,
+    contentType,
   });
 }

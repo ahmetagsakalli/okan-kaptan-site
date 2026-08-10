@@ -1,7 +1,7 @@
 import { get, put } from "@vercel/blob";
 
 export function hasBlobStorage() {
-  return Boolean(process.env.BLOB_READ_WRITE_TOKEN || process.env.BLOB_STORE_ID);
+  return Boolean(process.env.BLOB_READ_WRITE_TOKEN);
 }
 
 export async function readPrivateBlobText(pathname: string) {
@@ -9,7 +9,7 @@ export async function readPrivateBlobText(pathname: string) {
     return null;
   }
 
-  const blob = await get(pathname, { access: "private", useCache: false });
+  const blob = await get(pathname, { access: "private", useCache: false }).catch(() => null);
 
   if (!blob || blob.statusCode !== 200 || !blob.stream) {
     return null;
@@ -23,13 +23,17 @@ export async function writePrivateBlobText(pathname: string, text: string, conte
     return false;
   }
 
-  await put(pathname, text, {
-    access: "private",
-    addRandomSuffix: false,
-    allowOverwrite: true,
-    cacheControlMaxAge: 0,
-    contentType,
-  });
+  try {
+    await put(pathname, text, {
+      access: "private",
+      addRandomSuffix: false,
+      allowOverwrite: true,
+      cacheControlMaxAge: 0,
+      contentType,
+    });
+  } catch {
+    return false;
+  }
 
   return true;
 }
@@ -39,13 +43,17 @@ export async function writePrivateBlobBytes(pathname: string, bytes: Buffer, con
     return false;
   }
 
-  await put(pathname, bytes, {
-    access: "private",
-    addRandomSuffix: false,
-    allowOverwrite: true,
-    cacheControlMaxAge: 31_536_000,
-    contentType,
-  });
+  try {
+    await put(pathname, bytes, {
+      access: "private",
+      addRandomSuffix: false,
+      allowOverwrite: true,
+      cacheControlMaxAge: 31_536_000,
+      contentType,
+    });
+  } catch {
+    return false;
+  }
 
   return true;
 }
@@ -55,5 +63,5 @@ export async function readPrivateBlob(pathname: string) {
     return null;
   }
 
-  return get(pathname, { access: "private" });
+  return get(pathname, { access: "private" }).catch(() => null);
 }
