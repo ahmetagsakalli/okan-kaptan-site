@@ -47,11 +47,15 @@ export async function verifyAdminPassword(password: string) {
   const configuredPassword = getAdminPassword();
   const storedPasswordMatches = await verifyStoredPassword(password);
 
-  if (storedPasswordMatches !== null) {
-    return isAdminConfigured() && storedPasswordMatches;
+  if (!isAdminConfigured()) {
+    return false;
   }
 
-  return isAdminConfigured() && safeCompare(password, configuredPassword);
+  if (storedPasswordMatches === true) {
+    return true;
+  }
+
+  return safeCompare(password, configuredPassword);
 }
 
 export function createAdminToken() {
