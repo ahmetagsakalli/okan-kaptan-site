@@ -2,6 +2,7 @@ import { Play } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import type { CmsContent } from "../lib/cms-types";
+import { isDynamicMediaSource } from "../lib/media";
 import { galleryCollections } from "../lib/site-data";
 
 type HomeGalleryMarqueeProps = {
@@ -26,23 +27,36 @@ export function HomeGalleryMarquee({
         <div className="home-gallery-track">
           {loopItems.map((item, index) => {
             const isVideo = item.kind === "video";
+            const hasVideoPreview = isVideo && Boolean(item.videoSrc);
 
             return (
               <Link
                 className={`home-gallery-item ${isVideo ? "is-video" : ""}`}
                 href="/galeri"
-                key={`${item.title}-${index}`}
+                key={`${item.kind}-${item.src}-${item.videoSrc ?? ""}-${index}`}
                 aria-label="Galeri detay sayfasına git"
               >
-                <Image
-                  src={item.src}
-                  alt={item.alt}
-                  fill
-                  quality={60}
-                  loading="lazy"
-                  fetchPriority="low"
-                  sizes="(max-width: 640px) 76vw, 28vw"
-                />
+                {hasVideoPreview ? (
+                  <video
+                    className="home-gallery-video"
+                    src={item.videoSrc}
+                    muted
+                    playsInline
+                    preload="metadata"
+                    aria-hidden="true"
+                  />
+                ) : (
+                  <Image
+                    src={item.src}
+                    alt={item.alt}
+                    fill
+                    quality={60}
+                    loading="lazy"
+                    fetchPriority="low"
+                    sizes="(max-width: 640px) 76vw, 28vw"
+                    unoptimized={isDynamicMediaSource(item.src)}
+                  />
+                )}
                 {isVideo ? (
                   <span className="home-gallery-play" aria-hidden="true">
                     <Play size={22} fill="currentColor" />

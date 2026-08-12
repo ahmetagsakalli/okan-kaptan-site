@@ -4,6 +4,10 @@ export function hasBlobStorage() {
   return Boolean(process.env.BLOB_READ_WRITE_TOKEN);
 }
 
+export function requiresPersistentBlobStorage() {
+  return process.env.VERCEL === "1" || process.env.NODE_ENV === "production";
+}
+
 export async function readPrivateBlobText(pathname: string) {
   if (!hasBlobStorage()) {
     return null;

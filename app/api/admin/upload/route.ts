@@ -2,7 +2,7 @@ import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { NextRequest, NextResponse } from "next/server";
 import { isAdminApiRequest } from "../../../lib/admin-auth";
-import { writePrivateBlobBytes } from "../../../lib/blob-storage";
+import { requiresPersistentBlobStorage, writePrivateBlobBytes } from "../../../lib/blob-storage";
 
 export const runtime = "nodejs";
 
@@ -105,6 +105,13 @@ export async function POST(request: NextRequest) {
       });
     }
 
+    if (requiresPersistentBlobStorage()) {
+      return NextResponse.json(
+        { message: "Canlı sitede görsel yüklemek için Vercel Blob bağlantısı gerekli. BLOB_READ_WRITE_TOKEN ayarını kontrol et." },
+        { status: 500 },
+      );
+    }
+
     await mkdir(uploadDir, { recursive: true });
     await writeFile(outputPath, optimized);
 
@@ -129,6 +136,13 @@ export async function POST(request: NextRequest) {
       kind: "video",
       contentType,
     });
+  }
+
+  if (requiresPersistentBlobStorage()) {
+    return NextResponse.json(
+      { message: "Canlı sitede video yüklemek için Vercel Blob bağlantısı gerekli. BLOB_READ_WRITE_TOKEN ayarını kontrol et." },
+      { status: 500 },
+    );
   }
 
   await mkdir(uploadDir, { recursive: true });

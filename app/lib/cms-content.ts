@@ -1,6 +1,6 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { readPrivateBlobText, writePrivateBlobText } from "./blob-storage";
+import { readPrivateBlobText, requiresPersistentBlobStorage, writePrivateBlobText } from "./blob-storage";
 import { defaultCmsContent } from "./cms-defaults";
 import type { CmsContent } from "./cms-types";
 
@@ -116,6 +116,10 @@ export async function saveSiteContent(content: CmsContent) {
 
   if (await writePrivateBlobText(cmsBlobPath, serialized)) {
     return normalized;
+  }
+
+  if (requiresPersistentBlobStorage()) {
+    throw new Error("Canlı sitede kaydetmek için Vercel Blob bağlantısı gerekli. BLOB_READ_WRITE_TOKEN ayarını kontrol et.");
   }
 
   await mkdir(path.dirname(cmsDataPath), { recursive: true });

@@ -4,6 +4,7 @@ import { ChevronLeft, ChevronRight, Play, X } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 import type { CmsContent, CmsGalleryItem, CmsSocialGalleryItem } from "../lib/cms-types";
+import { isDynamicMediaSource } from "../lib/media";
 import { galleryCollections, socialGalleryItems, type Season } from "../lib/site-data";
 import { FacebookIcon, InstagramIcon } from "./site-icons";
 
@@ -90,6 +91,7 @@ export function SeasonGallery({
           <div className="media-grid">
             {items.map((item, index) => {
               const isVideo = item.kind === "video";
+              const hasVideoPreview = isVideo && Boolean(item.videoSrc);
               const isFeatured = item.featured === true;
 
               return (
@@ -97,25 +99,37 @@ export function SeasonGallery({
                   className={`media-card ${isFeatured ? "is-featured" : ""} ${
                     isVideo ? "is-video" : ""
                   }`}
-                  key={`${season}-${item.title}`}
+                  key={`${season}-${item.kind}-${item.src}-${item.videoSrc ?? ""}-${index}`}
                   onClick={() => setActiveIndex(index)}
                   style={{ position: "relative" }}
                   type="button"
                   aria-label={`${item.title} görselini büyüt`}
                 >
-                  <Image
-                    src={item.src}
-                    alt={item.alt}
-                    fill
-                    quality={68}
-                    loading={isFeatured && season === "summer" ? "eager" : "lazy"}
-                    fetchPriority={isFeatured && season === "summer" ? "auto" : "low"}
-                    sizes={
-                      isFeatured
-                        ? "(max-width: 860px) 100vw, 48vw"
-                        : "(max-width: 860px) 100vw, 24vw"
-                    }
-                  />
+                  {hasVideoPreview ? (
+                    <video
+                      className="media-card-video"
+                      src={item.videoSrc}
+                      muted
+                      playsInline
+                      preload="metadata"
+                      aria-hidden="true"
+                    />
+                  ) : (
+                    <Image
+                      src={item.src}
+                      alt={item.alt}
+                      fill
+                      quality={68}
+                      loading={isFeatured && season === "summer" ? "eager" : "lazy"}
+                      fetchPriority={isFeatured && season === "summer" ? "auto" : "low"}
+                      sizes={
+                        isFeatured
+                          ? "(max-width: 860px) 100vw, 48vw"
+                          : "(max-width: 860px) 100vw, 24vw"
+                      }
+                      unoptimized={isDynamicMediaSource(item.src)}
+                    />
+                  )}
                   {isVideo ? (
                     <span className="media-play" aria-hidden="true">
                       <Play size={22} fill="currentColor" />
@@ -160,10 +174,8 @@ export function SeasonGallery({
                   controls
                   playsInline
                   preload="metadata"
-                  poster={selectedItem.src}
-                >
-                  <source src={selectedItem.videoSrc} type="video/mp4" />
-                </video>
+                  src={selectedItem.videoSrc}
+                />
               ) : (
                 <Image
                   src={selectedItem.src}
@@ -171,6 +183,7 @@ export function SeasonGallery({
                   fill
                   quality={86}
                   sizes="100vw"
+                  unoptimized={isDynamicMediaSource(selectedItem.src)}
                 />
               )}
             </div>
@@ -223,6 +236,7 @@ export function SocialVideoSection({
                   loading="lazy"
                   fetchPriority="low"
                   sizes="(max-width: 860px) 100vw, 42vw"
+                  unoptimized={isDynamicMediaSource(item.image)}
                 />
                 <span className="social-video-play" aria-hidden="true">
                   <Play size={24} fill="currentColor" />

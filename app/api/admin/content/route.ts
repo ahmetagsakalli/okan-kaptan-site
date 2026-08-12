@@ -25,7 +25,16 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json({ message: "Geçersiz içerik verisi." }, { status: 400 });
   }
 
-  const content = await saveSiteContent(body);
+  let content: CmsContent;
+
+  try {
+    content = await saveSiteContent(body);
+  } catch (error) {
+    return NextResponse.json(
+      { message: error instanceof Error ? error.message : "İçerik kaydedilemedi." },
+      { status: 500 },
+    );
+  }
 
   ["/", "/galeri", "/hakkimizda", "/turlar", "/rota", "/teknemiz"].forEach((path) => {
     revalidatePath(path);

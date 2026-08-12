@@ -20,7 +20,7 @@ export const metadata = createPageMetadata({
   ],
 });
 
-export const revalidate = 3600;
+export const dynamic = "force-dynamic";
 
 export default async function RoutePage() {
   const content = await getSiteContent();

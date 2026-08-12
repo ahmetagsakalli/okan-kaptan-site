@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import {
   Anchor,
   Camera,
@@ -30,7 +29,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { ChangeEvent, DragEvent, FormEvent, useId, useMemo, useState } from "react";
+import { ChangeEvent, DragEvent, FormEvent, useEffect, useId, useMemo, useState } from "react";
 import type {
   CmsCaptain,
   CmsContent,
@@ -57,7 +56,6 @@ type UploadedMedia = {
 type Notice = {
   type: "success" | "error" | "info";
   text: string;
-  url?: string;
 };
 
 const tabs: { id: AdminTab; label: string; description: string; icon: LucideIcon }[] = [
@@ -71,9 +69,19 @@ const tabs: { id: AdminTab; label: string; description: string; icon: LucideIcon
   { id: "settings", label: "Ayarlar", description: "Şifre ve oturum", icon: KeyRound },
 ];
 
-const seasons: { id: CmsSeason; label: string }[] = [
-  { id: "summer", label: "Yaz" },
-  { id: "winter", label: "Kış" },
+const seasons: { id: CmsSeason; label: string; heading: string; description: string }[] = [
+  {
+    id: "summer",
+    label: "Yaz",
+    heading: "Yaz turu fotoğrafları",
+    description: "Koy, yüzme, yemek, güneşli tekne turu ve yaz gezi kareleri.",
+  },
+  {
+    id: "winter",
+    label: "Kış",
+    heading: "Kış balık turu fotoğrafları",
+    description: "Olta, av anı, yakalanan balıklar ve sakin kış rotası kareleri.",
+  },
 ];
 
 function splitLines(value: string) {
@@ -193,6 +201,14 @@ export function AdminDashboard({ initialContent }: AdminDashboardProps) {
   }
 
   async function saveContent() {
+    if (qualitySummary.videoWithoutFile > 0) {
+      setSaveNotice({
+        type: "error",
+        text: "Video kartı eklenmiş ama video dosyası seçilmemiş. Kaydetmeden önce video dosyasını seç.",
+      });
+      return;
+    }
+
     setIsSaving(true);
     setSaveNotice(null);
 
@@ -283,8 +299,7 @@ export function AdminDashboard({ initialContent }: AdminDashboardProps) {
       const uploadedLabel = uploaded.kind === "video" ? "Video" : "Fotoğraf";
       setUploadNotice({
         type: "success",
-        text: `${uploadedLabel} yüklendi: ${formatFileSize(uploaded.size)}`,
-        url: uploaded.url,
+        text: `${uploadedLabel} yüklendi (${formatFileSize(uploaded.size)}). Yayına almak için değişiklikleri kaydet.`,
       });
 
       return uploaded;
@@ -375,7 +390,8 @@ export function AdminDashboard({ initialContent }: AdminDashboardProps) {
 
   function addGalleryItem(season: CmsSeason, kind: CmsGalleryItem["kind"]) {
     const nextIndex = content.galleryCollections[season].items.length + 1;
-    const itemTitle = makeMediaTitle(kind === "video" ? "Galeri videosu" : "Galeri fotoğrafı", nextIndex);
+    const seasonLabel = seasons.find((item) => item.id === season)?.label ?? "Galeri";
+    const itemTitle = makeMediaTitle(kind === "video" ? `${seasonLabel} videosu` : `${seasonLabel} fotoğrafı`, nextIndex);
     const item: CmsGalleryItem = {
       kind,
       title: itemTitle,
@@ -394,7 +410,9 @@ export function AdminDashboard({ initialContent }: AdminDashboardProps) {
         },
       },
     }));
-    setRecentlyAddedMediaKey(makeRecentMediaKey(`${season}-gallery`, itemTitle));
+    setRecentlyAddedMediaKey(
+      makeRecentMediaKey(`${season}-gallery`, `${item.title}-${item.kind}-${item.src}-${item.videoSrc ?? ""}-0`),
+    );
     setSaveNotice({
       type: "info",
       text:
@@ -663,19 +681,27 @@ export function AdminDashboard({ initialContent }: AdminDashboardProps) {
           ) : null}
 
           {activeTab === "gallery" ? (
-            <Panel title="Galeri" description="Yaz ve kış fotoğrafları ayrı ayrı düzenlenir.">
+            <Panel title="Galeri" description="Yaz ve kış medya alanları ayrı bloklarda tutulur.">
               {seasons.map((season) => (
-                <div className="admin-season-block" key={season.id}>
+                <div className={`admin-season-block admin-season-block-${season.id}`} key={season.id}>
+                  <div className="admin-season-banner">
+                    <div>
+                      <span>{season.label} galerisi</span>
+                      <h3>{season.heading}</h3>
+                      <p>{season.description}</p>
+                    </div>
+                    <strong>{content.galleryCollections[season.id].items.length} medya</strong>
+                  </div>
                   <div className="admin-section-row">
-                    <h3>{season.label} galerisi</h3>
+                    <h3>{season.label} galerisi düzenle</h3>
                     <div className="admin-action-group">
                       <button type="button" onClick={() => addGalleryItem(season.id, "photo")}>
                         <ImagePlus size={16} aria-hidden="true" />
-                        Fotoğraf ekle
+                        {season.label} fotoğrafı ekle
                       </button>
                       <button type="button" onClick={() => addGalleryItem(season.id, "video")}>
                         <Video size={16} aria-hidden="true" />
-                        Video ekle
+                        {season.label} videosu ekle
                       </button>
                     </div>
                   </div>
@@ -699,28 +725,27 @@ export function AdminDashboard({ initialContent }: AdminDashboardProps) {
                   </Field>
                   <div className="admin-repeat-grid">
                     {content.galleryCollections[season.id].items.map((item, index) => {
-                      const mediaKey = makeRecentMediaKey(`${season.id}-gallery`, item.title);
+                      const mediaKey = makeRecentMediaKey(
+                        `${season.id}-gallery`,
+                        `${item.title}-${item.kind}-${item.src}-${item.videoSrc ?? ""}-${index}`,
+                      );
                       const isNew = recentlyAddedMediaKey === mediaKey;
 
                       return (
                       <article className={`admin-edit-card ${isNew ? "is-new" : ""}`} key={mediaKey}>
                         <div className="admin-media-card-header">
                           <div>
-                            <strong>{item.kind === "video" ? "Video" : "Fotoğraf"} {index + 1}</strong>
-                            <span>{item.kind === "video" ? "Kapak + video dosyası" : "Fotoğraf"}</span>
+                            <strong>
+                              {season.label} {item.kind === "video" ? "videosu" : "fotoğrafı"} {index + 1}
+                            </strong>
+                            <span>
+                              {item.kind === "video"
+                                ? "Video dosyası kartta kapak gibi görünür"
+                                : "Bu fotoğraf sadece bu galeriye eklenir"}
+                            </span>
                           </div>
                           {isNew ? <span className="admin-new-badge">Yeni eklendi</span> : null}
                         </div>
-                        <MediaField
-                          value={item.src}
-                          alt={item.alt}
-                          uploadKey={`${season.id}-gallery-${index}`}
-                          uploadingKey={uploadingKey}
-                          onUpload={uploadMedia}
-                          onChange={(src) => updateGalleryItem(season.id, index, { src })}
-                          buttonLabel={item.kind === "video" ? "Kapak fotoğrafı seç" : "Fotoğraf seç"}
-                          emptyLabel={item.kind === "video" ? "Kapak fotoğrafı seçilmedi" : "Fotoğraf seçilmedi"}
-                        />
                         {item.kind === "video" ? (
                           <MediaField
                             value={item.videoSrc ?? ""}
@@ -731,11 +756,23 @@ export function AdminDashboard({ initialContent }: AdminDashboardProps) {
                             onChange={(videoSrc) => updateGalleryItem(season.id, index, { videoSrc })}
                             preview="video"
                             accept="video/mp4,video/webm,video/quicktime"
-                            buttonLabel="Video seç"
+                            buttonLabel={`${season.label} videosu seç`}
                             emptyLabel="Video dosyası seçilmedi"
-                            helpText="MP4, WebM veya MOV yükle."
+                            helpText="Kapak ayrı seçilmiyor; sitede kart görseli videonun kendisinden alınır."
                           />
-                        ) : null}
+                        ) : (
+                          <MediaField
+                            value={item.src}
+                            alt={item.alt}
+                            uploadKey={`${season.id}-gallery-${index}`}
+                            uploadingKey={uploadingKey}
+                            onUpload={uploadMedia}
+                            onChange={(src) => updateGalleryItem(season.id, index, { src })}
+                            buttonLabel={`${season.label} fotoğrafı seç`}
+                            emptyLabel="Fotoğraf seçilmedi"
+                            helpText={`${season.label} galerisinde görünecek fotoğrafı yükle.`}
+                          />
+                        )}
                         <button className="admin-danger" type="button" onClick={() => removeGalleryItem(season.id, index)}>
                           <Trash2 size={16} aria-hidden="true" />
                           Bu medyayı sil
@@ -788,6 +825,9 @@ export function AdminDashboard({ initialContent }: AdminDashboardProps) {
                           ),
                         }))
                       }
+                      buttonLabel="Kapak fotoğrafı seç"
+                      emptyLabel="Kapak fotoğrafı seçilmedi"
+                      helpText="Bu kapak, aşağıdaki Instagram/Facebook bağlantısı için görünür."
 	                    />
 	                    <Field label="Platform">
                       <select
@@ -822,7 +862,7 @@ export function AdminDashboard({ initialContent }: AdminDashboardProps) {
 	                        }
 	                      />
 	                    </Field>
-                    <Field label="Bağlantı">
+                    <Field label="Açılacak video bağlantısı">
                       <input
                         value={item.href}
                         onChange={(event) =>
@@ -1383,7 +1423,6 @@ function OverviewPanel({
         <div className={`admin-system-notice is-${uploadNotice.type}`}>
           {uploadNotice.type === "success" ? <CheckCircle2 size={18} aria-hidden="true" /> : <XCircle size={18} aria-hidden="true" />}
           <span>{uploadNotice.text}</span>
-          {uploadNotice.url ? <code>{uploadNotice.url}</code> : null}
         </div>
       ) : null}
 
@@ -1459,6 +1498,16 @@ function MediaField({
   const actionLabel = buttonLabel ?? (isVideo ? "Video seç" : "Fotoğraf seç");
   const [isDragging, setIsDragging] = useState(false);
   const [notice, setNotice] = useState<Notice | null>(null);
+  const [localPreviewUrl, setLocalPreviewUrl] = useState("");
+  const displayValue = localPreviewUrl || value;
+
+  useEffect(() => {
+    return () => {
+      if (localPreviewUrl) {
+        URL.revokeObjectURL(localPreviewUrl);
+      }
+    };
+  }, [localPreviewUrl]);
 
   async function handleFile(file?: File) {
     if (!file) {
@@ -1466,15 +1515,30 @@ function MediaField({
     }
 
     setNotice(null);
+    const nextPreviewUrl = URL.createObjectURL(file);
+    setLocalPreviewUrl((currentPreviewUrl) => {
+      if (currentPreviewUrl) {
+        URL.revokeObjectURL(currentPreviewUrl);
+      }
+
+      return nextPreviewUrl;
+    });
 
     try {
       const uploaded = await onUpload(file, uploadKey);
       onChange(uploaded.url);
       setNotice({
         type: "success",
-        text: `${uploaded.kind === "video" ? "Video" : "Fotoğraf"} yüklendi (${formatFileSize(uploaded.size)}).`,
+        text: `${uploaded.kind === "video" ? "Video" : "Fotoğraf"} yüklendi. Yayına almak için kaydet.`,
       });
     } catch (error) {
+      setLocalPreviewUrl((currentPreviewUrl) => {
+        if (currentPreviewUrl) {
+          URL.revokeObjectURL(currentPreviewUrl);
+        }
+
+        return "";
+      });
       setNotice({
         type: "error",
         text: error instanceof Error ? error.message : "Medya yüklenemedi.",
@@ -1510,12 +1574,13 @@ function MediaField({
         onDragLeave={() => setIsDragging(false)}
         onDrop={onDrop}
       >
-        <div className={`admin-media-preview ${value ? "" : "is-empty"} ${isVideo ? "is-video" : ""}`}>
-          {value ? (
+        <div className={`admin-media-preview ${displayValue ? "" : "is-empty"} ${isVideo ? "is-video" : ""}`}>
+          {displayValue ? (
             isVideo ? (
-              <video className="admin-media-video-preview" src={value} controls preload="metadata" />
+              <video className="admin-media-video-preview" src={displayValue} controls preload="metadata" />
             ) : (
-              <Image src={value} alt={alt || "Admin fotoğraf önizlemesi"} fill sizes="220px" />
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={displayValue} alt={alt || "Admin fotoğraf önizlemesi"} />
             )
           ) : (
             <span>{emptyLabel ?? (isVideo ? "Video seçilmedi" : "Fotoğraf seçilmedi")}</span>
@@ -1526,7 +1591,7 @@ function MediaField({
           <span aria-hidden="true">
             {isUploading ? <RefreshCw size={16} /> : <UploadIcon size={16} />}
           </span>
-          <strong>{isUploading ? "Yükleniyor" : value ? "Değiştir" : actionLabel}</strong>
+          <strong>{isUploading ? "Yükleniyor" : displayValue ? "Değiştir" : actionLabel}</strong>
           <input id={inputId} type="file" accept={accept} disabled={isUploading} onChange={onFileChange} />
         </label>
       </div>

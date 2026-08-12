@@ -9,6 +9,7 @@ import type {
   CmsService,
   CmsTextItem,
 } from "../lib/cms-types";
+import { isDynamicMediaSource } from "../lib/media";
 import {
   aboutFacts,
   aboutStory,
@@ -67,6 +68,7 @@ export function SeasonalActivitiesSection({ items = services }: ServicesProps) {
                   loading="lazy"
                   fetchPriority="low"
                   sizes="(max-width: 860px) 100vw, 42vw"
+                  unoptimized={isDynamicMediaSource(service.image)}
                 />
               </div>
               <div className="activity-body">
@@ -106,6 +108,7 @@ export function ServicesSection({ items = services }: ServicesProps) {
                   loading={index === 0 ? "eager" : "lazy"}
                   fetchPriority={index === 0 ? "auto" : "low"}
                   sizes="(max-width: 720px) 100vw, 33vw"
+                  unoptimized={isDynamicMediaSource(service.image)}
                 />
               </div>
               <div className="service-body">
@@ -316,6 +319,7 @@ export function CaptainsSection({ items = captains }: CaptainsSectionProps) {
                   fetchPriority="low"
                   sizes="(max-width: 860px) 100vw, 34vw"
                   style={{ objectPosition: captain.imagePosition }}
+                  unoptimized={isDynamicMediaSource(captain.image)}
                 />
               </div>
               <div className="captain-body">
@@ -375,6 +379,7 @@ export function BoatInfoSection({
             loading="lazy"
             fetchPriority="low"
             sizes="(max-width: 860px) 100vw, 42vw"
+            unoptimized={isDynamicMediaSource(boat.image)}
           />
         </div>
         <div className="boat-info-body">
@@ -411,6 +416,7 @@ export function BoatInfoSection({
                 loading="lazy"
                 fetchPriority="low"
                 sizes="(max-width: 860px) 92vw, 24vw"
+                unoptimized={isDynamicMediaSource(item.src)}
               />
               <span className="visually-hidden">{item.title}</span>
             </div>
@@ -428,10 +434,8 @@ export function BoatInfoSection({
               controls
               playsInline
               preload="metadata"
-              poster={boat.videoPoster ?? boat.image}
-            >
-              <source src={boat.videoSrc} type="video/mp4" />
-            </video>
+              src={boat.videoSrc}
+            />
           </div>
         </article>
       ) : null}

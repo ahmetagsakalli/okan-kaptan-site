@@ -582,6 +582,59 @@
   gap: 12px;
 }
 
+.admin-season-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px;
+  color: var(--admin-deep);
+  border: 1px solid var(--admin-line);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.admin-season-banner span {
+  display: inline-flex;
+  margin-bottom: 5px;
+  color: var(--admin-muted);
+  font-size: 0.78rem;
+  font-weight: 820;
+  text-transform: uppercase;
+}
+
+.admin-season-banner h3,
+.admin-season-banner p {
+  margin: 0;
+}
+
+.admin-season-banner p {
+  margin-top: 5px;
+  color: var(--admin-muted);
+  line-height: 1.45;
+}
+
+.admin-season-banner strong {
+  display: inline-flex;
+  min-width: 86px;
+  justify-content: center;
+  padding: 8px 11px;
+  font-size: 0.84rem;
+  border: 1px solid var(--admin-line);
+  border-radius: 999px;
+  background: var(--admin-soft);
+}
+
+.admin-season-block-summer .admin-season-banner {
+  border-color: rgba(8, 126, 139, 0.24);
+  background: linear-gradient(135deg, #ffffff 0%, #eefbfc 100%);
+}
+
+.admin-season-block-winter .admin-season-banner {
+  border-color: rgba(34, 89, 122, 0.22);
+  background: linear-gradient(135deg, #ffffff 0%, #eef6ff 100%);
+}
+
 .admin-action-group {
   display: flex;
   flex-wrap: wrap;
@@ -682,6 +735,11 @@
 }
 
 .admin-media-preview img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
   object-fit: cover;
 }
 
@@ -863,6 +921,7 @@
 
   .admin-topbar-actions,
   .admin-section-row,
+  .admin-season-banner,
   .admin-savebar {
     align-items: stretch;
     flex-direction: column;
