@@ -36,7 +36,7 @@ export async function PUT(request: NextRequest) {
     );
   }
 
-  ["/", "/galeri", "/hakkimizda", "/turlar", "/rota", "/teknemiz"].forEach((path) => {
+  ["/", "/galeri", "/hakkimizda", "/turlar", "/turlar/yaz", "/turlar/kis", "/rota", "/teknemiz"].forEach((path) => {
     revalidatePath(path);
   });
 

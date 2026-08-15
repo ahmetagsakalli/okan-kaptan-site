@@ -1,4 +1,5 @@
 import type { CmsContent } from "./cms-types";
+import { googleReviewHighlights } from "./site-data";
 
 export const defaultCmsContent: CmsContent = {
   "hero": {
@@ -65,6 +66,34 @@ export const defaultCmsContent: CmsContent = {
           "alt": "Okan Kaptan teknesinin iç oturma ve masa düzeni"
         },
         {
+          "kind": "video",
+          "title": "Yaz tekne turu videosu",
+          "src": "/images/video-poster-boat-tour-walkthrough.webp",
+          "videoSrc": "/videos/boat-tour-walkthrough.mp4",
+          "alt": "Okan Kaptan yaz tekne turundan video karesi"
+        },
+        {
+          "kind": "video",
+          "title": "Koyda yüzme atlayışı",
+          "src": "/images/video-poster-summer-cove-jump.webp",
+          "videoSrc": "/videos/fishing-catch-1.mp4",
+          "alt": "Okan Kaptan yaz turunda koyda yüzme atlayışı video karesi"
+        },
+        {
+          "kind": "video",
+          "title": "Mordoğan deniz kesiti",
+          "src": "/images/video-poster-summer-sea-note.webp",
+          "videoSrc": "/videos/fishing-catch-2.mp4",
+          "alt": "Mordoğan yaz turundan deniz ve tekne video karesi"
+        },
+        {
+          "kind": "video",
+          "title": "Teknede yaz anları",
+          "src": "/images/video-poster-summer-boat-moment.webp",
+          "videoSrc": "/videos/fishing-catch-3.mp4",
+          "alt": "Okan Kaptan teknesinde yaz turu video karesi"
+        },
+        {
           "kind": "photo",
           "title": "Teknede sofra",
           "src": "/images/okan-dining.webp",
@@ -81,6 +110,18 @@ export const defaultCmsContent: CmsContent = {
           "title": "Berrak koy suyu",
           "src": "/images/clear-water.webp",
           "alt": "Mordoğan koylarında berrak turkuaz su"
+        },
+        {
+          "kind": "photo",
+          "title": "Yaz yüzme molası",
+          "src": "/images/summer-swim.webp",
+          "alt": "Okan Kaptan yaz turunda yüzme molası"
+        },
+        {
+          "kind": "photo",
+          "title": "Sahil rotasında tekne",
+          "src": "/images/coast-boat.webp",
+          "alt": "Mordoğan sahil rotasında Okan Kaptan teknesi"
         }
       ]
     },
@@ -96,11 +137,10 @@ export const defaultCmsContent: CmsContent = {
           "featured": true
         },
         {
-          "kind": "video",
-          "title": "Olta balıkçılığı videosu",
+          "kind": "photo",
+          "title": "Teknede av hatırası",
           "src": "/images/fish-guest-catch-2.webp",
-          "videoSrc": "/videos/fishing-catch-1.mp4",
-          "alt": "Okan Kaptan balık turu videosu için yakalanan balık görseli"
+          "alt": "Okan Kaptan balık turunda yakalanan balıkla hatıra karesi"
         },
         {
           "kind": "photo",
@@ -115,24 +155,16 @@ export const defaultCmsContent: CmsContent = {
           "alt": "Balık turunda gün içinde yakalanan balıklar"
         },
         {
-          "kind": "video",
-          "title": "Denizde av anları",
+          "kind": "photo",
+          "title": "Av sonrası kare",
           "src": "/images/fish-guest-catch-3.webp",
-          "videoSrc": "/videos/fishing-catch-2.mp4",
-          "alt": "Okan Kaptan olta balıkçılığı turundan video kapağı"
+          "alt": "Okan Kaptan balık turunda av sonrası yakalanan balık"
         },
         {
           "kind": "photo",
           "title": "Kış rotasında tekne",
           "src": "/images/fish-boat-side.webp",
           "alt": "Okan Kaptan teknesi balık turu için liman yanında"
-        },
-        {
-          "kind": "video",
-          "title": "Balık turundan kısa kesit",
-          "src": "/images/fish-catch-bucket.webp",
-          "videoSrc": "/videos/fishing-catch-3.mp4",
-          "alt": "Balık turundan kısa video için yakalanan balıklar"
         }
       ]
     }
@@ -153,28 +185,7 @@ export const defaultCmsContent: CmsContent = {
       "alt": "Facebook videosu için Okan Kaptan tekne görüntüsü"
     }
   ],
-  "googleReviewHighlights": [
-    {
-      "author": "Google kullanıcısı",
-      "text": "Tekne temizliği, ilgili kaptan ve sakin rota yorumlarda öne çıkıyor."
-    },
-    {
-      "author": "Google kullanıcısı",
-      "text": "Aileler ve gruplar için keyifli, güvenli ve rahat bir deniz günü."
-    },
-    {
-      "author": "Google kullanıcısı",
-      "text": "Mordoğan koyları, yüzme molaları ve berrak deniz deneyimi beğeniliyor."
-    },
-    {
-      "author": "Google kullanıcısı",
-      "text": "Samimi ekip, planlı tur akışı ve güzel manzara sıkça vurgulanıyor."
-    },
-    {
-      "author": "Google kullanıcısı",
-      "text": "Yaz turları kadar kış olta balıkçılığı da tercih ediliyor."
-    }
-  ],
+  "googleReviewHighlights": googleReviewHighlights,
   "aboutStory": [
     "Biz, Okan Kaptan ve Abdullah Kaptan olarak, denize olan tutkumuzu yılların deneyimiyle birleştirerek misafirlerimize unutulmaz anlar yaşatmak için hizmet veriyoruz.",
     "Okan Kaptan, Mordoğanlıdır. Halkla İlişkiler ve İşletme Fakültesi mezunudur. Uzun yıllar bankacılık sektöründe görev yaptıktan sonra 2019 yılında emekli olmuş ve çocukluğundan beri içinde taşıdığı deniz sevgisini mesleğe dönüştürmüştür. Emekliliğinin ardından teknesini büyüterek Mordoğan’ın eşsiz koylarında gezi, yüzme ve balık avı turları düzenlemeye başlamıştır.",
@@ -394,7 +405,7 @@ export const defaultCmsContent: CmsContent = {
     "Tekne Mordoğan Yeni Liman bünyesinde bağlıdır.",
     "Yol tarifi için Google Maps Okan Kaptan profili kullanılabilir.",
     "Güncel fiyat ve rezervasyon için 0 (533) 613 19 20 üzerinden doğrudan iletişim kurulabilir.",
-    "Güncel paylaşımlar için @okankaptan35 Instagram hesabı takip edilebilir."
+    "Güncel paylaşımlar için @okankaptanmordogantekneturu Instagram hesabı takip edilebilir."
   ],
   "faqItems": [
     {
@@ -445,7 +456,7 @@ export const defaultCmsContent: CmsContent = {
     {
       "id": "rezervasyon",
       "question": "Rezervasyon için nasıl iletişime geçebilirim?",
-      "answer": "Rezervasyon ve güncel fiyat bilgisi için 0 (533) 613 19 20 numarasını arayabilir veya WhatsApp üzerinden mesaj gönderebilirsiniz. Güncel paylaşımlar için @okankaptan35 Instagram hesabı takip edilebilir."
+      "answer": "Rezervasyon ve güncel fiyat bilgisi için 0 (533) 613 19 20 numarasını arayabilir veya WhatsApp üzerinden mesaj gönderebilirsiniz. Güncel paylaşımlar için @okankaptanmordogantekneturu Instagram hesabı takip edilebilir."
     }
   ]
 };

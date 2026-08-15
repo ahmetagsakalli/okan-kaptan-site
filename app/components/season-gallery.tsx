@@ -1,8 +1,8 @@
 "use client";
 
-import { ChevronLeft, ChevronRight, Play, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, Play, Snowflake, SunMedium, X } from "lucide-react";
 import Image from "next/image";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import type { CmsContent, CmsGalleryItem, CmsSocialGalleryItem } from "../lib/cms-types";
 import { isDynamicMediaSource } from "../lib/media";
 import { galleryCollections, socialGalleryItems, type Season } from "../lib/site-data";
@@ -13,15 +13,18 @@ type SeasonGalleryProps = {
   collections?: CmsContent["galleryCollections"];
   id?: string;
   title?: string;
+  controls?: ReactNode;
 };
 
 export function SeasonGallery({
   season,
   collections = galleryCollections as unknown as CmsContent["galleryCollections"],
   id = "galeri",
-  title = "Fotoğraf ve video galerisi",
+  title,
+  controls,
 }: SeasonGalleryProps) {
   const active = collections[season];
+  const headingTitle = title ?? active.title;
   const items = useMemo<readonly CmsGalleryItem[]>(() => active.items, [active.items]);
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
   const selectedItem = activeIndex === null ? null : items[activeIndex];
@@ -82,9 +85,10 @@ export function SeasonGallery({
       >
         <div className="season-gallery-head">
           <div>
-            <h2 id={`${id}-title`}>{title}</h2>
+            <h2 id={`${id}-title`}>{headingTitle}</h2>
             <p>{active.summary}</p>
           </div>
+          {controls}
         </div>
 
         <div className="gallery-stage" data-season={season}>
@@ -109,6 +113,9 @@ export function SeasonGallery({
                     <video
                       className="media-card-video"
                       src={item.videoSrc}
+                      poster={item.src}
+                      autoPlay
+                      loop
                       muted
                       playsInline
                       preload="metadata"
@@ -200,6 +207,52 @@ export function SeasonGallery({
         </div>
       ) : null}
     </>
+  );
+}
+
+type SeasonGallerySwitcherProps = {
+  collections?: CmsContent["galleryCollections"];
+  initialSeason?: Season;
+};
+
+export function SeasonGallerySwitcher({
+  collections = galleryCollections as unknown as CmsContent["galleryCollections"],
+  initialSeason = "summer",
+}: SeasonGallerySwitcherProps) {
+  const [season, setSeason] = useState<Season>(initialSeason);
+  const isWinter = season === "winter";
+
+  const controls = (
+    <div className="gallery-tabs" data-season={season} aria-label="Galeri mevsim seçimi">
+      <button
+        className={!isWinter ? "active" : ""}
+        type="button"
+        aria-pressed={!isWinter}
+        onClick={() => setSeason("summer")}
+      >
+        <SunMedium size={16} aria-hidden="true" />
+        Yaz
+      </button>
+      <button
+        className={isWinter ? "active" : ""}
+        type="button"
+        aria-pressed={isWinter}
+        onClick={() => setSeason("winter")}
+      >
+        <Snowflake size={16} aria-hidden="true" />
+        Kış
+      </button>
+    </div>
+  );
+
+  return (
+    <SeasonGallery
+      key={season}
+      season={season}
+      collections={collections}
+      id={isWinter ? "kis-galerisi" : "yaz-galerisi"}
+      controls={controls}
+    />
   );
 }
 

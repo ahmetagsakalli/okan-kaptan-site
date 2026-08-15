@@ -3,28 +3,35 @@ import Image from "next/image";
 import Link from "next/link";
 import type { CmsContent } from "../lib/cms-types";
 import { isDynamicMediaSource } from "../lib/media";
-import { galleryCollections } from "../lib/site-data";
+import { galleryCollections, type Season } from "../lib/site-data";
 
 type HomeGalleryMarqueeProps = {
   collections?: CmsContent["galleryCollections"];
+  season?: Season;
 };
 
 export function HomeGalleryMarquee({
   collections = galleryCollections as unknown as CmsContent["galleryCollections"],
+  season = "summer",
 }: HomeGalleryMarqueeProps) {
-  const marqueeItems = [
-    ...collections.summer.items,
-    ...collections.winter.items.slice(0, 3),
-  ];
+  const activeCollection = collections[season];
+  const marqueeItems = activeCollection.items;
   const loopItems = [...marqueeItems, ...marqueeItems];
+  const title = season === "summer" ? "Yaz turları nasıl mı?" : "Kış balık avları nasıl mı?";
+  const galleryHref = `/galeri?season=${season}`;
 
   return (
-    <section className="home-gallery-marquee reveal-item" aria-labelledby="home-gallery-title">
+    <section
+      className="home-gallery-marquee reveal-item"
+      data-season={season}
+      aria-labelledby="home-gallery-title"
+    >
       <div className="section-heading compact">
-        <h2 id="home-gallery-title">Turlarımız nasıl mı?</h2>
+        <h2 id="home-gallery-title">{title}</h2>
+        <p>{activeCollection.summary}</p>
       </div>
       <div className="home-gallery-window">
-        <div className="home-gallery-track">
+        <div className="home-gallery-track" key={season}>
           {loopItems.map((item, index) => {
             const isVideo = item.kind === "video";
             const hasVideoPreview = isVideo && Boolean(item.videoSrc);
@@ -32,7 +39,7 @@ export function HomeGalleryMarquee({
             return (
               <Link
                 className={`home-gallery-item ${isVideo ? "is-video" : ""}`}
-                href="/galeri"
+                href={galleryHref}
                 key={`${item.kind}-${item.src}-${item.videoSrc ?? ""}-${index}`}
                 aria-label="Galeri detay sayfasına git"
               >
@@ -40,6 +47,9 @@ export function HomeGalleryMarquee({
                   <video
                     className="home-gallery-video"
                     src={item.videoSrc}
+                    poster={item.src}
+                    autoPlay
+                    loop
                     muted
                     playsInline
                     preload="metadata"
@@ -68,7 +78,9 @@ export function HomeGalleryMarquee({
         </div>
       </div>
       <div className="home-gallery-link">
-        <Link href="/galeri">Galeriyi aç</Link>
+        <Link href={galleryHref}>
+          {season === "summer" ? "Yaz galerisini aç" : "Kış galerisini aç"}
+        </Link>
       </div>
     </section>
   );

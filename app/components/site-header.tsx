@@ -10,6 +10,7 @@ import { BrandLogo } from "./brand-logo";
 const navItems = [
   { href: "/", label: "Ana sayfa" },
   { href: "/turlar", label: "Turlar" },
+  { href: "/galeri", label: "Galeri" },
   { href: "/rota", label: "Rota" },
   { href: "/teknemiz", label: "Teknemiz" },
   { href: "/hakkimizda", label: "Hakkımızda" },

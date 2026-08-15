@@ -16,7 +16,41 @@ function asString(value: unknown, fallback: string) {
 }
 
 function asStringArray(value: unknown, fallback: string[]) {
-  return Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : fallback;
+  return Array.isArray(value)
+    ? value
+        .filter((item): item is string => typeof item === "string")
+        .map((item) => item.trim())
+        .filter(Boolean)
+    : fallback;
+}
+
+function normalizeCaptains(value: unknown, fallback: CmsContent["captains"]) {
+  if (!Array.isArray(value)) {
+    return fallback;
+  }
+
+  const defaultCaptain = fallback[0] ?? {
+    name: "Kaptan",
+    image: "",
+    imagePosition: "50% 45%",
+    alt: "Kaptan fotoğrafı",
+    bio: [],
+  };
+
+  return value.map((item, index) => {
+    const source = item && typeof item === "object" ? (item as Partial<CmsContent["captains"][number]>) : {};
+    const fallbackCaptain = fallback[index] ?? defaultCaptain;
+
+    return {
+      ...fallbackCaptain,
+      ...source,
+      name: asString(source.name, fallbackCaptain.name),
+      image: asString(source.image, fallbackCaptain.image),
+      imagePosition: asString(source.imagePosition, fallbackCaptain.imagePosition),
+      alt: asString(source.alt, fallbackCaptain.alt),
+      bio: asStringArray(source.bio, fallbackCaptain.bio),
+    };
+  });
 }
 
 function normalizeContent(input: unknown): CmsContent {
@@ -68,7 +102,7 @@ function normalizeContent(input: unknown): CmsContent {
       ? source.googleReviewHighlights
       : fallback.googleReviewHighlights,
     aboutStory: asStringArray(source.aboutStory, fallback.aboutStory),
-    captains: Array.isArray(source.captains) ? source.captains : fallback.captains,
+    captains: normalizeCaptains(source.captains, fallback.captains),
     boat: {
       ...fallback.boat,
       ...source.boat,

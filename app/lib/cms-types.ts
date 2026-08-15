@@ -53,6 +53,8 @@ export type CmsSocialGalleryItem = {
 export type CmsReview = {
   author: string;
   text: string;
+  rating?: number;
+  href?: string;
 };
 
 export type CmsCaptain = {

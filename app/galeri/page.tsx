@@ -1,8 +1,9 @@
 import { ContactSection } from "../components/content-sections";
 import { DetailPage } from "../components/detail-page";
-import { SeasonGallery, SocialVideoSection } from "../components/season-gallery";
+import { SeasonGallerySwitcher, SocialVideoSection } from "../components/season-gallery";
 import { getSiteContent } from "../lib/cms-content";
 import { createPageMetadata } from "../lib/seo";
+import type { Season } from "../lib/site-data";
 
 export const metadata = createPageMetadata({
   path: "/galeri",
@@ -18,26 +19,24 @@ export const metadata = createPageMetadata({
 
 export const dynamic = "force-dynamic";
 
-export default async function GalleryPage() {
+type GalleryPageProps = {
+  searchParams?: Promise<{
+    season?: string | string[];
+  }>;
+};
+
+export default async function GalleryPage({ searchParams }: GalleryPageProps) {
   const content = await getSiteContent();
+  const params = await searchParams;
+  const seasonParam = Array.isArray(params?.season) ? params.season[0] : params?.season;
+  const initialSeason: Season = seasonParam === "winter" ? "winter" : "summer";
 
   return (
     <DetailPage
       title="Galeri"
       description="Yaz ve kış turlarından seçili fotoğraf ve video alanları."
     >
-      <SeasonGallery
-        season="summer"
-        collections={content.galleryCollections}
-        id="yaz-galerisi"
-        title="Yaz turları"
-      />
-      <SeasonGallery
-        season="winter"
-        collections={content.galleryCollections}
-        id="kis-galerisi"
-        title="Kış balıkçılığı"
-      />
+      <SeasonGallerySwitcher collections={content.galleryCollections} initialSeason={initialSeason} />
       <SocialVideoSection items={content.socialGalleryItems} />
       <ContactSection />
     </DetailPage>

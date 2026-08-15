@@ -21,6 +21,7 @@ import {
   fishingTourHighlights,
   googleMapsEmbedUrl,
   googleMapsUrl,
+  instagramHandle,
   instagramUrl,
   locationHighlights,
   mealMenu,
@@ -33,18 +34,21 @@ import {
   services,
   trustItems,
   tourSpecs,
+  type Season,
   whatsappUrl,
 } from "../lib/site-data";
 import { BrandLogo } from "./brand-logo";
 import { InstagramIcon, WhatsAppIcon } from "./site-icons";
 
 const serviceAnchors = ["yaz-gezi-yuzme", "kis-olta-balikciligi", "yemekli-tur"] as const;
+const serviceDetailLinks = ["/turlar/yaz", "/turlar/kis", "/turlar#yemekli-tur"] as const;
 
 type ServicesProps = {
   items?: CmsService[];
+  season?: Season;
 };
 
-export function SeasonalActivitiesSection({ items = services }: ServicesProps) {
+export function SeasonalActivitiesSection({ items = services, season = "summer" }: ServicesProps) {
   const featuredServices = items.slice(0, 2);
 
   return (
@@ -55,10 +59,16 @@ export function SeasonalActivitiesSection({ items = services }: ServicesProps) {
       <div className="activity-grid">
         {featuredServices.map((service, index) => {
           const Icon = services[index]?.icon ?? services[0].icon;
-          const href = `/turlar#${serviceAnchors[index]}`;
+          const href = serviceDetailLinks[index] ?? `/turlar#${serviceAnchors[index]}`;
+          const isActive = (season === "summer" && index === 0) || (season === "winter" && index === 1);
 
           return (
-            <Link className="activity-card" href={href} key={service.title}>
+            <Link
+              className="activity-card"
+              data-active={isActive ? "true" : undefined}
+              href={href}
+              key={service.title}
+            >
               <div className="activity-image">
                 <Image
                   src={service.image}
@@ -658,6 +668,7 @@ export function ContactSection() {
           <Link href="/teknemiz">Teknemiz</Link>
           <Link href="/#sss">SSS</Link>
           <Link href="/#iletisim">İletişim</Link>
+          <Link href="/kvkk">KVKK</Link>
         </nav>
         <p className="contact-credit">
           Web tasarım, uygulama ve geliştirme:{" "}
@@ -681,7 +692,7 @@ export function ContactSection() {
             <InstagramIcon />
           </span>
           <span className="contact-copy">
-            <strong>@okankaptan35</strong>
+            <strong>{instagramHandle}</strong>
             Güncel paylaşımlar
           </span>
         </a>

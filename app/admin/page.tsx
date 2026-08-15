@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { AdminDashboard } from "./admin-dashboard";
 import { hasAdminSession } from "../lib/admin-auth";
+import { hasBlobStorage, requiresPersistentBlobStorage } from "../lib/blob-storage";
 import { getSiteContent } from "../lib/cms-content";
 
 export const dynamic = "force-dynamic";
@@ -12,5 +13,13 @@ export default async function AdminPage() {
 
   const content = await getSiteContent();
 
-  return <AdminDashboard initialContent={content} />;
+  return (
+    <AdminDashboard
+      initialContent={content}
+      systemStatus={{
+        hasBlobStorage: hasBlobStorage(),
+        requiresBlobStorage: requiresPersistentBlobStorage(),
+      }}
+    />
+  );
 }

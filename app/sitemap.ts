@@ -6,8 +6,11 @@ const routes = [
   { path: "/galeri", priority: 0.86 },
   { path: "/hakkimizda", priority: 0.82 },
   { path: "/turlar", priority: 0.9 },
+  { path: "/turlar/yaz", priority: 0.86 },
+  { path: "/turlar/kis", priority: 0.86 },
   { path: "/rota", priority: 0.82 },
   { path: "/teknemiz", priority: 0.82 },
+  { path: "/kvkk", priority: 0.35 },
 ];
 
 export default function sitemap(): MetadataRoute.Sitemap {
@@ -16,7 +19,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
 
     return {
       url,
-      lastModified: new Date("2026-08-06"),
+      lastModified: new Date("2026-08-13"),
       changeFrequency: "weekly",
       priority: route.priority,
       alternates: {

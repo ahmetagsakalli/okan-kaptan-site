@@ -1,6 +1,7 @@
 "use client";
 
-import { LockKeyhole, Ship } from "lucide-react";
+import { LockKeyhole } from "lucide-react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 
@@ -36,10 +37,15 @@ export function AdminLoginForm() {
     <main className="admin-login-screen">
       <section className="admin-login-card" aria-labelledby="admin-login-title">
         <span className="admin-login-mark" aria-hidden="true">
-          <Ship size={34} />
+          <Image
+            src="/images/okan-kaptan-logo.webp"
+            alt=""
+            width={132}
+            height={112}
+            priority
+          />
         </span>
         <h1 id="admin-login-title">Okan Kaptan Admin</h1>
-        <p>İçerik, görsel ve galeri düzenlemeleri için güvenli giriş.</p>
         <form onSubmit={onSubmit}>
           <label htmlFor="admin-password">Admin şifresi</label>
           <div className="admin-password-field">

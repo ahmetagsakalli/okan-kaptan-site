@@ -19,20 +19,23 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { phoneHref, whatsappUrl } from "./contact-links";
+import type { CmsReview } from "./cms-types";
 
 export { phoneHref, whatsappUrl };
 
 export type Season = "summer" | "winter";
 
 export const phoneDisplay = "0533 613 19 20";
-export const instagramUrl = "https://www.instagram.com/okankaptan35/";
-export const googleBusinessUrl = "https://share.google/FSKuHB1bqvSqEgC4M";
-export const googleMapsUrl = "https://maps.app.goo.gl/W6DfMqYWbUxW1w987";
+export const instagramHandle = "@okankaptanmordogantekneturu";
+export const instagramUrl = "https://www.instagram.com/okankaptanmordogantekneturu/";
+export const googleBusinessUrl = "https://share.google/GFNCqx57uf5Zlxqyx";
+export const googlePlaceId = "ChIJWZeN1mK9uxQREwPOwn2RbAU";
+export const googleMapsUrl = `https://www.google.com/maps/place/?q=place_id:${googlePlaceId}`;
 export const googleMapsEmbedUrl =
   "https://www.google.com/maps?q=Okan%20Kaptan%20Mordo%C4%9Fan%20Gezi%20ve%20Y%C3%BCzme%20Turlar%C4%B1&output=embed";
 export const developerUrl = "https://kocyigityazilim.com";
 export const googleReviewsUrl =
-  "https://www.google.com/search?sca_esv=b59435e14644ce34&hl=tr-TR&sxsrf=APpeQnutGrAcyJBjNf0MBclq-g3i4u3alw:1785864251874&q=Okan+kaptan+Mordo%C4%9Fan+gezi+ve+y%C3%BCzme+turlar%C4%B1&si=APenkKm7iecQ4G6P-TsbSMFKIQtv3EFIqRAFw-i8uEbk55Z-_5AspuU_C4tEsUvKcQu1pJSx1GJiBNv3Ur6ZCq7IoAEYiIsBeCREommuKDGeJidjkZH0Xic%3D&uds=AJ5uw1_qjlRx65q3NdtskgtQzMvnGUhsc4Fnua-baHjnSg5k9TReZPY2GMwKaSUl5bsM_kXEvLdnoa58dSB3JsDkQxV-j0_rESGxtNlZSKvkWq1ArnqrkSY2ATHPsA3jcKTsEbkBeXh59kBnzRnJlU2U1OWqMwlFmA&sa=X&ved=2ahUKEwiu5uXivoeWAxXRhP0HHVn3IVwQ3PALegQIGxAE&biw=1680&bih=823&dpr=2";
+  "https://www.google.com/search?q=Okan+kaptan+Mordo%C4%9Fan+gezi+ve+y%C3%BCzme+turlar%C4%B1+karaburun+yorumlar%C4%B1&si=APenkKm7iecQ4G6P-TsbSMFKIQtv3EFIqRAFw-i8uEbk55Z-_5AspuU_C4tEsUvKcQu1pJSx1GJiBNv3Ur6ZCq7IoAEYiIsBeCREommuKDGeJidjkZH0Xic%3D";
 export const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://okankaptan35.com";
 
 type IconItem = {
@@ -96,6 +99,34 @@ export const galleryCollections = {
         alt: "Okan Kaptan teknesinin iç oturma ve masa düzeni",
       },
       {
+        kind: "video",
+        title: "Yaz tekne turu videosu",
+        src: "/images/video-poster-boat-tour-walkthrough.webp",
+        videoSrc: "/videos/boat-tour-walkthrough.mp4",
+        alt: "Okan Kaptan yaz tekne turundan video karesi",
+      },
+      {
+        kind: "video",
+        title: "Koyda yüzme atlayışı",
+        src: "/images/video-poster-summer-cove-jump.webp",
+        videoSrc: "/videos/fishing-catch-1.mp4",
+        alt: "Okan Kaptan yaz turunda koyda yüzme atlayışı video karesi",
+      },
+      {
+        kind: "video",
+        title: "Mordoğan deniz kesiti",
+        src: "/images/video-poster-summer-sea-note.webp",
+        videoSrc: "/videos/fishing-catch-2.mp4",
+        alt: "Mordoğan yaz turundan deniz ve tekne video karesi",
+      },
+      {
+        kind: "video",
+        title: "Teknede yaz anları",
+        src: "/images/video-poster-summer-boat-moment.webp",
+        videoSrc: "/videos/fishing-catch-3.mp4",
+        alt: "Okan Kaptan teknesinde yaz turu video karesi",
+      },
+      {
         kind: "photo",
         title: "Teknede sofra",
         src: "/images/okan-dining.webp",
@@ -113,6 +144,18 @@ export const galleryCollections = {
         src: "/images/clear-water.webp",
         alt: "Mordoğan koylarında berrak turkuaz su",
       },
+      {
+        kind: "photo",
+        title: "Yaz yüzme molası",
+        src: "/images/summer-swim.webp",
+        alt: "Okan Kaptan yaz turunda yüzme molası",
+      },
+      {
+        kind: "photo",
+        title: "Sahil rotasında tekne",
+        src: "/images/coast-boat.webp",
+        alt: "Mordoğan sahil rotasında Okan Kaptan teknesi",
+      },
     ],
   },
   winter: {
@@ -127,11 +170,10 @@ export const galleryCollections = {
         featured: true,
       },
       {
-        kind: "video",
-        title: "Olta balıkçılığı videosu",
+        kind: "photo",
+        title: "Teknede av hatırası",
         src: "/images/fish-guest-catch-2.webp",
-        videoSrc: "/videos/fishing-catch-1.mp4",
-        alt: "Okan Kaptan balık turu videosu için yakalanan balık görseli",
+        alt: "Okan Kaptan balık turunda yakalanan balıkla hatıra karesi",
       },
       {
         kind: "photo",
@@ -146,24 +188,16 @@ export const galleryCollections = {
         alt: "Balık turunda gün içinde yakalanan balıklar",
       },
       {
-        kind: "video",
-        title: "Denizde av anları",
+        kind: "photo",
+        title: "Av sonrası kare",
         src: "/images/fish-guest-catch-3.webp",
-        videoSrc: "/videos/fishing-catch-2.mp4",
-        alt: "Okan Kaptan olta balıkçılığı turundan video kapağı",
+        alt: "Okan Kaptan balık turunda av sonrası yakalanan balık",
       },
       {
         kind: "photo",
         title: "Kış rotasında tekne",
         src: "/images/fish-boat-side.webp",
         alt: "Okan Kaptan teknesi balık turu için liman yanında",
-      },
-      {
-        kind: "video",
-        title: "Balık turundan kısa kesit",
-        src: "/images/fish-catch-bucket.webp",
-        videoSrc: "/videos/fishing-catch-3.mp4",
-        alt: "Balık turundan kısa video için yakalanan balıklar",
       },
     ],
   },
@@ -236,26 +270,228 @@ export const routeCoves = [
 
 export const routePointPositions = ["18%", "40%", "63%", "86%"];
 
-export const googleReviewHighlights = [
+export const googleReviewHighlights: CmsReview[] = [
   {
-    author: "Google kullanıcısı",
-    text: "Tekne temizliği, ilgili kaptan ve sakin rota yorumlarda öne çıkıyor.",
+    author: "Volkan Gazioglu",
+    text: "Herşey çok keyifli çok güzeldi. Teşekkürler kaptanım.",
+    rating: 5,
+    href: googleReviewsUrl,
   },
   {
-    author: "Google kullanıcısı",
-    text: "Aileler ve gruplar için keyifli, güvenli ve rahat bir deniz günü.",
+    author: "Mustafa Ayvaz",
+    text: "Servisler mükemmel kaptan harika kesinlikle tercih ediyorum çok zevkli bir yolculuktu süvarimiz okan beye çok teşekkürler",
+    rating: 5,
+    href: googleReviewsUrl,
   },
   {
-    author: "Google kullanıcısı",
-    text: "Mordoğan koyları, yüzme molaları ve berrak deniz deneyimi beğeniliyor.",
+    author: "Murat Erdoğan",
+    text: "Sabah başlayan cay sohpetimiz mükemmel bir turla devam etti kaptanlarımız çok ilgiliydi bu turla birlikte yeni dostlarımz oldğunu düşünüyorum okan kaptan ve Abdullah kaptana cok teşekkürler bütün tanıdıklarıma tavsiye edicem",
+    rating: 5,
+    href: googleReviewsUrl,
   },
   {
-    author: "Google kullanıcısı",
-    text: "Samimi ekip, planlı tur akışı ve güzel manzara sıkça vurgulanıyor.",
+    author: "Hamza Tokaç",
+    text: "Çok eğlendik koylar çok güzeldi",
+    rating: 5,
+    href: googleReviewsUrl,
   },
   {
-    author: "Google kullanıcısı",
-    text: "Yaz turları kadar kış olta balıkçılığı da tercih ediliyor.",
+    author: "serpil iflazoglu",
+    text: "Okan ve Apo kaptanla yaptığımız tekne turu çok keyifliydi. Deniz ve manzaralar çok güzeldi. Samimi eğlenceli ve bol yüzmeli harika bir gün oldu. Teşekkürler.",
+    rating: 5,
+    href: googleReviewsUrl,
+  },
+  {
+    author: "nazif iflazoğlu",
+    text: "Tekne turunda, Mordoğan’ın, denizin güzelliği kaptanların samimi ilgisi ile birleşince keyfimiz tavan yaptı. Harika bir geziydi, teşekkürler Okan ve Apo kaptan… Yeniden görüşmek üzere…👍🙏👋",
+    rating: 5,
+    href: googleReviewsUrl,
+  },
+  {
+    author: "Dilek Balcı",
+    text: "Haziran ayinda okan kaptan ile ailece ilk turumuzu yapmistik o kadar mennun kaldik ki ailece ikinci bir tur yaptik 5 agustosta biz yiyeceklerimizi kendimiz …",
+    rating: 5,
+    href: googleReviewsUrl,
+  },
+  {
+    author: "Illy Dem",
+    text: "Harika ve eğlenceli bir gün geçirdik. Mordogan da yaptığımız tekne turu, her açıdan mükemmel di! Iki kaptanımız da son derece profesyonel ve ilgili idi, bize …",
+    rating: 5,
+    href: googleReviewsUrl,
+  },
+  {
+    author: "Eyüp Çelikkol",
+    text: "Okan kaptan ve Apo kaptan’a ilgi ve alakalarından dolayı çok teşekkür ediyorum, harika zaman geçirdik. Kesinlikle tavsiye ediyorum…",
+    rating: 5,
+    href: googleReviewsUrl,
+  },
+  {
+    author: "fem akcan",
+    text: "Ya gerçekten inanılmaz güzel bir gün geçirdik. Okan kaptan ve Abdullah kaptan sağolsunlar uzun süredir gördüğüm/yüzdüğüm en güzel koyları gezdirdiler, hizmette …",
+    rating: 5,
+    href: googleReviewsUrl,
+  },
+  {
+    author: "Recep Yilmaz",
+    text: "Samimiyetiniz turu daha da güzelleştiyor",
+    rating: 5,
+    href: googleReviewsUrl,
+  },
+  {
+    author: "Mustafa Kavuklu",
+    text: "Keyifli rahat samimi Güler yüzlü kaliteli hizmet lezzetli mezeler harika köfteler götürdüğü koylar tertemiz denizin ve güneşin keyfini rahatça sürüyorsunuz …",
+    rating: 5,
+    href: googleReviewsUrl,
+  },
+  {
+    author: "turgut aslan",
+    text: "Hafta içi geldik yüzme turu kanı ve köfteler çok güzeldi Mezeler ise müthiş güzeldi Teşekkürler kaptanım Kışın balık turuna gelmiştik balık turlarını da yemekli yapsanız çok güzel olur Herkese tavsiye ederim",
+    rating: 5,
+    href: googleReviewsUrl,
+  },
+  {
+    author: "gökhan önem",
+    text: "Cok guzel bir tekne turuydu 🙏 Samiyetleri icin, guzel bir gun icin Okan Kaptan ve Abdullah Kaptana cok tesekkur ediyorum",
+    rating: 5,
+    href: googleReviewsUrl,
+  },
+  {
+    author: "Görkem Gürgen",
+    text: "Okan Kaptan ve Abdullah Kaptan'a her şey için çok teşekkür ederiz. Tekne turu baştan sona harikaydı. Gittiğimiz koylar birbirinden güzel, deniz tertemiz ve …",
+    rating: 5,
+    href: googleReviewsUrl,
+  },
+  {
+    author: "Emre Berk Algül",
+    text: "Muhteşem bir deneyimdi. Okan Kaptan'ın samimiyeti, ilgisi ve profesyonelliği sayesinde unutulmaz bir gün yaşadık. Tekne tertemizdi, koylar birbirinden güzeldi. Kesinlikle tekrar geleceğiz. Herkese tavsiye ederim!",
+    rating: 5,
+    href: googleReviewsUrl,
+  },
+  {
+    author: "Muhsin Dalfidan",
+    text: "Biz misafirlere saygı ve sevgiyi esirgemeyen, düzeyli ama samimi bir ortamda ev sahipliği yaptılar kaptanlar. İstediğin müzikle eğlenmek, eşsiz güzellikteki …",
+    rating: 5,
+    href: googleReviewsUrl,
+  },
+  {
+    author: "Kerim Yılmaz",
+    text: "10 numara işinin hakkıyla yerine getiren harika insan tşk Okan kaptan",
+    rating: 5,
+    href: googleReviewsUrl,
+  },
+  {
+    author: "eti tutku",
+    text: "Okan ve Abdullah kaptan bu iş için yaratılmış mükemmel insanlar.Bu kadar ilgi alaka doğrusu beklemiyordum.Ailecek çok memnun kaldık.Kesinlikle tavsiye ediyorum.Daha önce böyle bir deneyim yaşamamışsanız mutlaka deneyin",
+    rating: 5,
+    href: googleReviewsUrl,
+  },
+  {
+    author: "Oktay B",
+    text: "Eğlenceli güzel bir tekne turuydu. Kaptanların yaklaşımı,koyların güzelliği bir sonraki tur için planlamamızı öne çekti. Teknenin uygun olduğu ilk anda tekrar rezervasyon yaptırdık.",
+    rating: 5,
+    href: googleReviewsUrl,
+  },
+  {
+    author: "Mehmet Kurt",
+    text: "Okan kaptan’la hem balık tutmak hem Güzel bir tekne turu yapmak çok zevkliydi çok güler yüzlü çok süper bir insan tavsiye ederim selamlar",
+    rating: 5,
+    href: googleReviewsUrl,
+  },
+  {
+    author: "sefkat yuksel",
+    text: "Okan ve Apo kaptan ev sahipliginde harika bir zaman geçirdik. Benim gibi yüzme ve deniz meraklilarinin arayıp da bulamadığı konfora sahip olduk. Kaptanlara bizi …",
+    rating: 5,
+    href: googleReviewsUrl,
+  },
+  {
+    author: "sadi yüksel",
+    text: "Güzel bir teknede samimi kaptanlarla iyi bir gün geçirmek için doğru adres \"Okan Kaptan\"",
+    rating: 5,
+    href: googleReviewsUrl,
+  },
+  {
+    author: "Burak Demir",
+    text: "Okan kaptanla teknede hem gezinti hemde balık tutmak çok keyifliydi oldukça güleryüzlülerdi yemekleri çok güzeldi tekneside temiz ve hijyenikti",
+    rating: 5,
+    href: googleReviewsUrl,
+  },
+  {
+    author: "erhan kızılkaya",
+    text: "Okan kaptan ve Apo kaptan ile çok keyifli bir tur geçirdik içten ve samimi bu güzel tur için çok teşekkür ederim",
+    rating: 5,
+    href: googleReviewsUrl,
+  },
+  {
+    author: "ömer tekeli",
+    text: "Koylar tekne hizmet özellikle okan kaptanın ilgi alakası cok iyiydi tekrarlamak için sabırsızlanıyoruz",
+    rating: 5,
+    href: googleReviewsUrl,
+  },
+  {
+    author: "turhan hun",
+    text: "Denizin, huzurun ve misafirperverliğin bir araya geldiği harika bir deneyimdi. Abdullah ve Okan Kaptan'ın ilgisi ve güler yüzü bu turu çok daha özel kıldı. …",
+    rating: 5,
+    href: googleReviewsUrl,
+  },
+  {
+    author: "Tarik Balci",
+    text: "Arkadaş grubu olarak katıldık. Okan Kaptan harika, tekne tertemiz, Mordoğan koyları muhteşem. İlgi, samimiyet ve profesyonellik…Hiç düşünmeden tercih edebilirsiniz.",
+    rating: 5,
+    href: googleReviewsUrl,
+  },
+  {
+    author: "Serhat Yalciner",
+    text: "Arkadaşlarımla çok eğlendik, Okan kaptan bir tane 👍",
+    rating: 5,
+    href: googleReviewsUrl,
+  },
+  {
+    author: "tülün özduran",
+    text: "Okan kaptan ve apo kaptanla Mordoğan'ın güzel koylarını gördük ailecek çok güzel bir gün geçirdik çok teşekkür ederiz.",
+    rating: 5,
+    href: googleReviewsUrl,
+  },
+  {
+    author: "Ayşegül Paksoy",
+    text: "Her şey beklentimizin üzerindeydi. Güler yüzlü kaptanlarımız sayesinde güzel bir tekne turu geçirdik yemekler güzeldi ve muhteşem koylara gittik Emeği geçen herkese teşekkür ederiz. Düşünen herkese öneririm aile veya arkadaş her kesime hitap ediyor 👏",
+    rating: 5,
+    href: googleReviewsUrl,
+  },
+  {
+    author: "Süleyman Soykırlı",
+    text: "Okan Kaptan ile yaptığımız güzel tekne turu çok keyifli geçti , Kaptanımızı son derece hassas ve özenli davranışları teşekkürü hak ediyor...teşekkürler Okan Kaptan , en kısa sürede tekrar görüşmek dileğiyle....selamlar.",
+    rating: 5,
+    href: googleReviewsUrl,
+  },
+  {
+    author: "mustafa özduran",
+    text: "Bence mordoğanda balık ve yüzme gezileri için 1 numara. Okan kaptan ve apo kaptan... Her iki kaptanda ne yaptıklarını bilen insanlar. Teşekkürler.",
+    rating: 5,
+    href: googleReviewsUrl,
+  },
+  {
+    author: "Ayşegül Hun",
+    text: "Çok keyifli bir gün geçirdik. Güleryüzlü kaptanlar tertemiz bir ortam nefis yemekler eşliğinde denizin tadını çıkardık.Hem biz yetişkinler hemde çocuklar için bulunmaz bir ortamdı.Herkese gönül rahatlığıyla tavsiye ederim.",
+    rating: 5,
+    href: googleReviewsUrl,
+  },
+  {
+    author: "Batuhan Öztürkdaş",
+    text: "Geçtiğimiz haftasonu arkadaş çevremiz ile tura çıktık. Kaptanın güleryüzü rotası hizmeti ve eğlencesi ile 10/10 vakit geçirdik. Kesinlikle tavsiye ederim.",
+    rating: 5,
+    href: googleReviewsUrl,
+  },
+  {
+    author: "kardelen yüksel",
+    text: "Tekne çok konforlu,çok eğlendik sadece size özel olması çok iyi,kaptanlar çok güleryüzlü hizmet ve yemekler süperdi.",
+    rating: 5,
+    href: googleReviewsUrl,
+  },
+  {
+    author: "Turkan Yuksel",
+    text: "Çok güzel koylarda gezdik kaptanlar çok ilgili",
+    rating: 5,
+    href: googleReviewsUrl,
   },
 ];
 
@@ -462,7 +698,7 @@ export const locationHighlights = [
   "Tekne Mordoğan Yeni Liman bünyesinde bağlıdır.",
   "Yol tarifi için Google Maps Okan Kaptan profili kullanılabilir.",
   "Güncel fiyat ve rezervasyon için 0 (533) 613 19 20 üzerinden doğrudan iletişim kurulabilir.",
-  "Güncel paylaşımlar için @okankaptan35 Instagram hesabı takip edilebilir.",
+  "Güncel paylaşımlar için @okankaptanmordogantekneturu Instagram hesabı takip edilebilir.",
 ];
 
 export const faqItems = [
@@ -524,7 +760,7 @@ export const faqItems = [
     id: "rezervasyon",
     question: "Rezervasyon için nasıl iletişime geçebilirim?",
     answer:
-      "Rezervasyon ve güncel fiyat bilgisi için 0 (533) 613 19 20 numarasını arayabilir veya WhatsApp üzerinden mesaj gönderebilirsiniz. Güncel paylaşımlar için @okankaptan35 Instagram hesabı takip edilebilir.",
+      "Rezervasyon ve güncel fiyat bilgisi için 0 (533) 613 19 20 numarasını arayabilir veya WhatsApp üzerinden mesaj gönderebilirsiniz. Güncel paylaşımlar için @okankaptanmordogantekneturu Instagram hesabı takip edilebilir.",
   },
 ];
 

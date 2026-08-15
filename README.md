@@ -30,7 +30,7 @@ http://localhost:3000
 
 ```bash
 ADMIN_PASSWORD=change-this-admin-password
-ADMIN_SESSION_SECRET=change-this-long-random-secret
+ADMIN_SESSION_SECRET=change-this-long-random-secret-at-least-32-chars
 ```
 
 Vercel production ortaminda medya yukleme icin `BLOB_READ_WRITE_TOKEN` tanimli olmalidir.
@@ -49,7 +49,7 @@ cp .env.production.example .env.production
 
 ```bash
 ADMIN_PASSWORD=guclu-admin-sifresi
-ADMIN_SESSION_SECRET=uzun-rastgele-bir-secret
+ADMIN_SESSION_SECRET=uzun-rastgele-bir-secret-en-az-32-karakter
 NEXT_PUBLIC_SITE_URL=https://okankaptan35.com
 ```
 

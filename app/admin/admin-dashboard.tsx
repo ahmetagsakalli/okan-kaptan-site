@@ -2,7 +2,6 @@
 
 import {
   Anchor,
-  Camera,
   Check,
   CheckCircle2,
   CircleAlert,
@@ -29,7 +28,8 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { ChangeEvent, DragEvent, FormEvent, useEffect, useId, useMemo, useState } from "react";
+import type { CSSProperties, ChangeEvent, DragEvent, FormEvent } from "react";
+import { useEffect, useId, useMemo, useState } from "react";
 import type {
   CmsCaptain,
   CmsContent,
@@ -43,6 +43,12 @@ import type {
 
 type AdminDashboardProps = {
   initialContent: CmsContent;
+  systemStatus?: AdminSystemStatus;
+};
+
+type AdminSystemStatus = {
+  hasBlobStorage: boolean;
+  requiresBlobStorage: boolean;
 };
 
 type AdminTab = "overview" | "hero" | "services" | "gallery" | "captains" | "routeFaq" | "extra" | "settings";
@@ -57,6 +63,13 @@ type Notice = {
   type: "success" | "error" | "info";
   text: string;
 };
+
+const maxImageUploadBytes = 8 * 1024 * 1024;
+const maxVideoUploadBytes = 120 * 1024 * 1024;
+const clientImageTypes = new Set(["image/jpeg", "image/jpg", "image/png", "image/webp"]);
+const clientVideoTypes = new Set(["video/mp4", "video/webm", "video/quicktime"]);
+const clientImageExtensions = new Set(["jpg", "jpeg", "png", "webp"]);
+const clientVideoExtensions = new Set(["mp4", "webm", "mov"]);
 
 const tabs: { id: AdminTab; label: string; description: string; icon: LucideIcon }[] = [
   { id: "overview", label: "Genel bakış", description: "Özet ve hızlı geçişler", icon: LayoutDashboard },
@@ -87,30 +100,17 @@ const seasons: { id: CmsSeason; label: string; heading: string; description: str
 function splitLines(value: string) {
   return value
     .split("\n")
-    .map((item) => item.trim())
-    .filter(Boolean);
+    .map((item) => item.trim());
 }
 
 function splitParagraphs(value: string) {
   return value
     .split(/\n{2,}/)
-    .map((item) => item.trim())
-    .filter(Boolean);
+    .map((item) => item.trim());
 }
 
 function paragraphsToText(items: string[]) {
   return items.join("\n\n");
-}
-
-function makeId(value: string) {
-  const slug = value
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-zA-Z0-9]+/g, "-")
-    .replace(/^-|-$/g, "")
-    .toLowerCase();
-
-  return slug || `sss-${Date.now()}`;
 }
 
 function formatFileSize(bytes: number) {
@@ -121,6 +121,75 @@ function formatFileSize(bytes: number) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
+function getFileExtension(name: string) {
+  return name.split(".").pop()?.toLocaleLowerCase("tr-TR") ?? "";
+}
+
+function parsePositionToken(token: string | undefined, axis: "x" | "y") {
+  const normalized = token?.trim().toLocaleLowerCase("tr-TR");
+
+  if (!normalized) {
+    return axis === "x" ? 50 : 45;
+  }
+
+  if (normalized.endsWith("%")) {
+    const value = Number.parseFloat(normalized);
+
+    if (Number.isFinite(value)) {
+      return Math.min(100, Math.max(0, Math.round(value)));
+    }
+  }
+
+  if (normalized === "left" || normalized === "top") {
+    return 0;
+  }
+
+  if (normalized === "right" || normalized === "bottom") {
+    return 100;
+  }
+
+  return normalized === "center" ? 50 : axis === "x" ? 50 : 45;
+}
+
+function parseImageFocus(value: string | undefined) {
+  const [xToken, yToken] = (value || "").trim().split(/\s+/);
+
+  return {
+    x: parsePositionToken(xToken, "x"),
+    y: parsePositionToken(yToken, "y"),
+  };
+}
+
+function formatImagePosition(x: number, y: number) {
+  return `${Math.min(100, Math.max(0, Math.round(x)))}% ${Math.min(100, Math.max(0, Math.round(y)))}%`;
+}
+
+function getMediaValidationError(file: File, expectedKind: "image" | "video") {
+  const extension = getFileExtension(file.name);
+
+  if (expectedKind === "image") {
+    if (!clientImageTypes.has(file.type) && !clientImageExtensions.has(extension)) {
+      return "Fotoğraf için JPG, PNG veya WebP dosyası seç.";
+    }
+
+    if (file.size > maxImageUploadBytes) {
+      return "Fotoğraf 8 MB'tan küçük olmalı.";
+    }
+
+    return null;
+  }
+
+  if (!clientVideoTypes.has(file.type) && !clientVideoExtensions.has(extension)) {
+    return "Video için MP4, WebM veya MOV dosyası seç.";
+  }
+
+  if (file.size > maxVideoUploadBytes) {
+    return "Video 120 MB'tan küçük olmalı.";
+  }
+
+  return null;
+}
+
 function makeMediaTitle(label: string, index: number) {
   return `${label} ${index}`;
 }
@@ -129,14 +198,11 @@ function makeMediaAlt(label: string) {
   return `Okan Kaptan ${label.toLocaleLowerCase("tr-TR")} fotoğrafı`;
 }
 
-function makeRecentMediaKey(scope: string, title: string) {
-  return `${scope}:${title}`;
-}
-
-export function AdminDashboard({ initialContent }: AdminDashboardProps) {
+export function AdminDashboard({ initialContent, systemStatus }: AdminDashboardProps) {
   const router = useRouter();
   const [content, setContent] = useState<CmsContent>(initialContent);
   const [activeTab, setActiveTab] = useState<AdminTab>("overview");
+  const [activeGallerySeason, setActiveGallerySeason] = useState<CmsSeason>("summer");
   const [saveNotice, setSaveNotice] = useState<Notice | null>(null);
   const [uploadNotice, setUploadNotice] = useState<Notice | null>(null);
   const [isDirty, setIsDirty] = useState(false);
@@ -193,6 +259,8 @@ export function AdminDashboard({ initialContent }: AdminDashboardProps) {
   }, [navFilter]);
 
   const activeTabMeta = tabs.find((tab) => tab.id === activeTab) ?? tabs[0];
+  const activeGalleryMeta = seasons.find((season) => season.id === activeGallerySeason) ?? seasons[0];
+  const activeGallery = content.galleryCollections[activeGallerySeason];
 
   function updateContent(updater: (current: CmsContent) => CmsContent) {
     setContent(updater);
@@ -212,24 +280,28 @@ export function AdminDashboard({ initialContent }: AdminDashboardProps) {
     setIsSaving(true);
     setSaveNotice(null);
 
-    const response = await fetch("/api/admin/content", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(content),
-    });
+    try {
+      const response = await fetch("/api/admin/content", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(content),
+      });
 
-    if (!response.ok) {
-      const body = (await response.json().catch(() => null)) as { message?: string } | null;
-      setSaveNotice({ type: "error", text: body?.message ?? "Kaydetme sırasında hata oluştu." });
+      if (!response.ok) {
+        const body = (await response.json().catch(() => null)) as { message?: string } | null;
+        setSaveNotice({ type: "error", text: body?.message ?? "Kaydetme sırasında hata oluştu." });
+        return;
+      }
+
+      setContent((await response.json()) as CmsContent);
+      setIsDirty(false);
+      setSaveNotice({ type: "success", text: "Değişiklikler kaydedildi." });
+      router.refresh();
+    } catch {
+      setSaveNotice({ type: "error", text: "Kaydetme sırasında bağlantı hatası oluştu. Tekrar dene." });
+    } finally {
       setIsSaving(false);
-      return;
     }
-
-    setContent((await response.json()) as CmsContent);
-    setIsDirty(false);
-    setSaveNotice({ type: "success", text: "Değişiklikler kaydedildi." });
-    setIsSaving(false);
-    router.refresh();
   }
 
   async function logout() {
@@ -389,6 +461,7 @@ export function AdminDashboard({ initialContent }: AdminDashboardProps) {
   }
 
   function addGalleryItem(season: CmsSeason, kind: CmsGalleryItem["kind"]) {
+    setActiveGallerySeason(season);
     const nextIndex = content.galleryCollections[season].items.length + 1;
     const seasonLabel = seasons.find((item) => item.id === season)?.label ?? "Galeri";
     const itemTitle = makeMediaTitle(kind === "video" ? `${seasonLabel} videosu` : `${seasonLabel} fotoğrafı`, nextIndex);
@@ -410,9 +483,7 @@ export function AdminDashboard({ initialContent }: AdminDashboardProps) {
         },
       },
     }));
-    setRecentlyAddedMediaKey(
-      makeRecentMediaKey(`${season}-gallery`, `${item.title}-${item.kind}-${item.src}-${item.videoSrc ?? ""}-0`),
-    );
+    setRecentlyAddedMediaKey(`${season}-gallery-${kind}-0`);
     setSaveNotice({
       type: "info",
       text:
@@ -463,7 +534,7 @@ export function AdminDashboard({ initialContent }: AdminDashboardProps) {
         gallery: [item, ...(current.boat.gallery ?? [])],
       },
     }));
-    setRecentlyAddedMediaKey(makeRecentMediaKey("boat-gallery", itemTitle));
+    setRecentlyAddedMediaKey("boat-gallery-0");
     setSaveNotice({ type: "info", text: "Yeni tekne fotoğrafı en üste eklendi. Fotoğrafı seçip kaydet." });
   }
 
@@ -492,7 +563,7 @@ export function AdminDashboard({ initialContent }: AdminDashboardProps) {
             <Ship size={24} />
           </span>
           <div>
-            <strong>Okan Kaptan</strong>
+            <strong>Yönetim Paneli</strong>
             <span>Site yönetimi</span>
           </div>
         </div>
@@ -587,9 +658,8 @@ export function AdminDashboard({ initialContent }: AdminDashboardProps) {
           {activeTab === "overview" ? (
             <OverviewPanel
               isDirty={isDirty}
-              mediaSummary={mediaSummary}
-              qualitySummary={qualitySummary}
               uploadNotice={uploadNotice}
+              systemStatus={systemStatus}
               onOpenTab={setActiveTab}
               onSave={saveContent}
               isSaving={isSaving}
@@ -651,7 +721,7 @@ export function AdminDashboard({ initialContent }: AdminDashboardProps) {
             <Panel title="Tur kartları" description="Ana sayfa etkinlikleri ve turlar sayfasındaki ana kartlar.">
               <div className="admin-repeat-grid">
                 {content.services.map((service, index) => (
-                  <article className="admin-edit-card" key={`${service.title}-${index}`}>
+                  <article className="admin-edit-card" key={`service-${index}`}>
                     <MediaField
                       value={service.image}
                       alt={service.alt}
@@ -682,66 +752,77 @@ export function AdminDashboard({ initialContent }: AdminDashboardProps) {
 
           {activeTab === "gallery" ? (
             <Panel title="Galeri" description="Yaz ve kış medya alanları ayrı bloklarda tutulur.">
-              {seasons.map((season) => (
-                <div className={`admin-season-block admin-season-block-${season.id}`} key={season.id}>
-                  <div className="admin-season-banner">
-                    <div>
-                      <span>{season.label} galerisi</span>
-                      <h3>{season.heading}</h3>
-                      <p>{season.description}</p>
-                    </div>
-                    <strong>{content.galleryCollections[season.id].items.length} medya</strong>
-                  </div>
-                  <div className="admin-section-row">
-                    <h3>{season.label} galerisi düzenle</h3>
-                    <div className="admin-action-group">
-                      <button type="button" onClick={() => addGalleryItem(season.id, "photo")}>
-                        <ImagePlus size={16} aria-hidden="true" />
-                        {season.label} fotoğrafı ekle
-                      </button>
-                      <button type="button" onClick={() => addGalleryItem(season.id, "video")}>
-                        <Video size={16} aria-hidden="true" />
-                        {season.label} videosu ekle
-                      </button>
-                    </div>
-                  </div>
-                  <Field label="Galeri açıklaması">
-                    <textarea
-                      rows={2}
-                      value={content.galleryCollections[season.id].summary}
-                      onChange={(event) =>
-                        updateContent((current) => ({
-                          ...current,
-                          galleryCollections: {
-                            ...current.galleryCollections,
-                            [season.id]: {
-                              ...current.galleryCollections[season.id],
-                              summary: event.target.value,
-                            },
-                          },
-                        }))
-                      }
-                    />
-                  </Field>
-                  <div className="admin-repeat-grid">
-                    {content.galleryCollections[season.id].items.map((item, index) => {
-                      const mediaKey = makeRecentMediaKey(
-                        `${season.id}-gallery`,
-                        `${item.title}-${item.kind}-${item.src}-${item.videoSrc ?? ""}-${index}`,
-                      );
-                      const isNew = recentlyAddedMediaKey === mediaKey;
+              <div className="admin-segment" aria-label="Galeri mevsimi">
+                {seasons.map((season) => (
+                  <button
+                    className={activeGallerySeason === season.id ? "is-active" : ""}
+                    key={season.id}
+                    type="button"
+                    aria-pressed={activeGallerySeason === season.id}
+                    onClick={() => setActiveGallerySeason(season.id)}
+                  >
+                    <strong>{season.label}</strong>
+                    <span>{content.galleryCollections[season.id].items.length} medya</span>
+                  </button>
+                ))}
+              </div>
 
-                      return (
+              <div className={`admin-season-block admin-season-block-${activeGallerySeason}`}>
+                <div className="admin-season-banner">
+                  <div>
+                    <span>{activeGalleryMeta.label} galerisi</span>
+                    <h3>{activeGalleryMeta.heading}</h3>
+                    <p>{activeGalleryMeta.description}</p>
+                  </div>
+                  <strong>{activeGallery.items.length} medya</strong>
+                </div>
+                <div className="admin-section-row">
+                  <h3>{activeGalleryMeta.label} galerisi düzenle</h3>
+                  <div className="admin-action-group">
+                    <button type="button" onClick={() => addGalleryItem(activeGallerySeason, "photo")}>
+                      <ImagePlus size={16} aria-hidden="true" />
+                      Fotoğraf ekle
+                    </button>
+                    <button type="button" onClick={() => addGalleryItem(activeGallerySeason, "video")}>
+                      <Video size={16} aria-hidden="true" />
+                      Video ekle
+                    </button>
+                  </div>
+                </div>
+                <Field label="Galeri açıklaması">
+                  <textarea
+                    rows={2}
+                    value={activeGallery.summary}
+                    onChange={(event) =>
+                      updateContent((current) => ({
+                        ...current,
+                        galleryCollections: {
+                          ...current.galleryCollections,
+                          [activeGallerySeason]: {
+                            ...current.galleryCollections[activeGallerySeason],
+                            summary: event.target.value,
+                          },
+                        },
+                      }))
+                    }
+                  />
+                </Field>
+                <div className="admin-repeat-grid">
+                  {activeGallery.items.map((item, index) => {
+                    const mediaKey = `${activeGallerySeason}-gallery-${item.kind}-${index}`;
+                    const isNew = recentlyAddedMediaKey === mediaKey;
+
+                    return (
                       <article className={`admin-edit-card ${isNew ? "is-new" : ""}`} key={mediaKey}>
                         <div className="admin-media-card-header">
                           <div>
                             <strong>
-                              {season.label} {item.kind === "video" ? "videosu" : "fotoğrafı"} {index + 1}
+                              {activeGalleryMeta.label} {item.kind === "video" ? "videosu" : "fotoğrafı"} {index + 1}
                             </strong>
                             <span>
                               {item.kind === "video"
-                                ? "Video dosyası kartta kapak gibi görünür"
-                                : "Bu fotoğraf sadece bu galeriye eklenir"}
+                                ? "Video dosyası hem önizleme hem de oynatma için kullanılır"
+                                : "Bu fotoğraf sadece seçili galeriye eklenir"}
                             </span>
                           </div>
                           {isNew ? <span className="admin-new-badge">Yeni eklendi</span> : null}
@@ -750,39 +831,39 @@ export function AdminDashboard({ initialContent }: AdminDashboardProps) {
                           <MediaField
                             value={item.videoSrc ?? ""}
                             alt={`${item.title} videosu`}
-                            uploadKey={`${season.id}-gallery-video-${index}`}
+                            uploadKey={`${activeGallerySeason}-gallery-video-${index}`}
                             uploadingKey={uploadingKey}
                             onUpload={uploadMedia}
-                            onChange={(videoSrc) => updateGalleryItem(season.id, index, { videoSrc })}
+                            onChange={(videoSrc) => updateGalleryItem(activeGallerySeason, index, { videoSrc })}
                             preview="video"
                             accept="video/mp4,video/webm,video/quicktime"
-                            buttonLabel={`${season.label} videosu seç`}
+                            buttonLabel="Video seç"
                             emptyLabel="Video dosyası seçilmedi"
-                            helpText="Kapak ayrı seçilmiyor; sitede kart görseli videonun kendisinden alınır."
+                            helpText="MP4, WebM veya MOV yükle. Sitedeki önizleme videonun ilk karesinden gelir."
                           />
                         ) : (
                           <MediaField
                             value={item.src}
                             alt={item.alt}
-                            uploadKey={`${season.id}-gallery-${index}`}
+                            uploadKey={`${activeGallerySeason}-gallery-${index}`}
                             uploadingKey={uploadingKey}
                             onUpload={uploadMedia}
-                            onChange={(src) => updateGalleryItem(season.id, index, { src })}
-                            buttonLabel={`${season.label} fotoğrafı seç`}
+                            onChange={(src) => updateGalleryItem(activeGallerySeason, index, { src })}
+                            buttonLabel="Fotoğraf seç"
                             emptyLabel="Fotoğraf seçilmedi"
-                            helpText={`${season.label} galerisinde görünecek fotoğrafı yükle.`}
+                            helpText={`${activeGalleryMeta.label} galerisinde görünecek fotoğrafı yükle.`}
                           />
                         )}
-                        <button className="admin-danger" type="button" onClick={() => removeGalleryItem(season.id, index)}>
+                        <button className="admin-danger" type="button" onClick={() => removeGalleryItem(activeGallerySeason, index)}>
                           <Trash2 size={16} aria-hidden="true" />
                           Bu medyayı sil
                         </button>
                       </article>
-                      );
-                    })}
-                  </div>
+                    );
+                  })}
                 </div>
-              ))}
+              </div>
+
               <div className="admin-season-block">
                 <div className="admin-section-row">
                   <h3>Sosyal video bağlantıları</h3>
@@ -796,7 +877,7 @@ export function AdminDashboard({ initialContent }: AdminDashboardProps) {
                           {
                             platform: "Instagram",
                             title: "Yeni sosyal video",
-                            href: "https://www.instagram.com/okankaptan35/",
+                            href: "https://www.instagram.com/okankaptanmordogantekneturu/",
                             image: "/images/okan-boat-real-cove.webp",
                             alt: "Okan Kaptan sosyal video kapağı",
                           },
@@ -810,7 +891,7 @@ export function AdminDashboard({ initialContent }: AdminDashboardProps) {
                 </div>
                 <div className="admin-repeat-grid">
                 {content.socialGalleryItems.map((item, index) => (
-                  <article className="admin-edit-card" key={`${item.href}-${index}`}>
+                  <article className="admin-edit-card" key={`social-gallery-${index}`}>
                     <MediaField
                       value={item.image}
                       alt={item.alt}
@@ -899,7 +980,7 @@ export function AdminDashboard({ initialContent }: AdminDashboardProps) {
             <Panel title="Kaptanlar" description="Kaptan fotoğrafları ve uzun biyografi metinleri. Paragrafları boş satırla ayır.">
               <div className="admin-repeat-grid">
                 {content.captains.map((captain, index) => (
-                  <article className="admin-edit-card is-wide" key={captain.name}>
+                  <article className="admin-edit-card is-wide" key={`captain-${index}`}>
                     <MediaField
                       value={captain.image}
                       alt={captain.alt}
@@ -907,9 +988,15 @@ export function AdminDashboard({ initialContent }: AdminDashboardProps) {
                       uploadingKey={uploadingKey}
                       onUpload={uploadMedia}
                       onChange={(image) => updateCaptain(index, { image })}
-	                    />
-	                    <Field label="İsim">
-	                      <input
+                      objectPosition={captain.imagePosition}
+                      previewFrame="captain"
+                    />
+                    <ImagePositionControl
+                      value={captain.imagePosition}
+                      onChange={(imagePosition) => updateCaptain(index, { imagePosition })}
+                    />
+                    <Field label="İsim">
+                      <input
                           value={captain.name}
                           onChange={(event) =>
                             updateCaptain(index, {
@@ -918,7 +1005,7 @@ export function AdminDashboard({ initialContent }: AdminDashboardProps) {
                             })
                           }
                         />
-	                    </Field>
+                    </Field>
                     <Field label="Biyografi">
                       <textarea
                         rows={12}
@@ -936,7 +1023,7 @@ export function AdminDashboard({ initialContent }: AdminDashboardProps) {
             <Panel title="Rota ve SSS" description="Rota adımları, kısa bilgiler ve sık sorulan sorular.">
               <div className="admin-repeat-grid">
                 {content.route.steps.map((step, index) => (
-                  <article className="admin-edit-card" key={`${step.time}-${index}`}>
+                  <article className="admin-edit-card" key={`route-step-${index}`}>
                     <Field label="Saat">
                       <input
                         value={step.time}
@@ -1042,7 +1129,7 @@ export function AdminDashboard({ initialContent }: AdminDashboardProps) {
                           updateContent((current) => ({
                             ...current,
                             faqItems: current.faqItems.map((item, itemIndex) =>
-                              itemIndex === index ? { ...item, question: event.target.value, id: makeId(event.target.value) } : item,
+                              itemIndex === index ? { ...item, question: event.target.value } : item,
                             ),
                           }))
                         }
@@ -1170,7 +1257,7 @@ export function AdminDashboard({ initialContent }: AdminDashboardProps) {
                   </div>
 		                  <div className="admin-repeat-grid">
 		                    {(content.boat.gallery ?? []).map((item, index) => {
-                          const mediaKey = makeRecentMediaKey("boat-gallery", item.title);
+                          const mediaKey = `boat-gallery-${index}`;
                           const isNew = recentlyAddedMediaKey === mediaKey;
 
                           return (
@@ -1244,7 +1331,7 @@ export function AdminDashboard({ initialContent }: AdminDashboardProps) {
                 </div>
                 <div className="admin-repeat-grid">
                   {content.fishingPreparation.map((group, index) => (
-                    <article className="admin-edit-card" key={`${group.title}-${index}`}>
+                    <article className="admin-edit-card" key={`fishing-preparation-${index}`}>
                       <Field label="Başlık">
                         <input
                           value={group.title}
@@ -1334,7 +1421,7 @@ export function AdminDashboard({ initialContent }: AdminDashboardProps) {
             </Panel>
           ) : null}
 
-          {activeTab !== "settings" ? (
+          {activeTab !== "settings" && activeTab !== "overview" ? (
             <div className={`admin-savebar ${isDirty ? "is-dirty" : ""}`}>
               <span className={saveNotice ? `is-${saveNotice.type}` : ""}>
                 {saveNotice?.type === "success" ? <CheckCircle2 size={18} aria-hidden="true" /> : null}
@@ -1355,68 +1442,43 @@ export function AdminDashboard({ initialContent }: AdminDashboardProps) {
 
 function OverviewPanel({
   isDirty,
-  mediaSummary,
-  qualitySummary,
   uploadNotice,
+  systemStatus,
   onOpenTab,
   onSave,
   isSaving,
 }: {
   isDirty: boolean;
-  mediaSummary: { total: number; videos: number };
-  qualitySummary: { videoWithoutFile: number };
   uploadNotice: Notice | null;
+  systemStatus?: AdminSystemStatus;
   onOpenTab: (tab: AdminTab) => void;
   onSave: () => void;
   isSaving: boolean;
 }) {
   const quickActions: { title: string; text: string; tab: AdminTab; icon: LucideIcon }[] = [
-    { title: "Tur kartları", text: "Ana sayfa ve turlar fotoğrafları", tab: "services", icon: Anchor },
-    { title: "Galeri", text: "Yaz, kış, video ve sosyal bağlantılar", tab: "gallery", icon: Images },
-    { title: "Tekne içerikleri", text: "Tekne fotoğrafları, video ve donanım", tab: "extra", icon: Ship },
-    { title: "Rota & SSS", text: "Saat akışı, koylar ve sorular", tab: "routeFaq", icon: HelpCircle },
+    { title: "Tur kartları", text: "Yaz ve kış tur görselleri", tab: "services", icon: Anchor },
+    { title: "Galeri", text: "Fotoğraf, video, sosyal bağlantılar", tab: "gallery", icon: Images },
+    { title: "Tekne", text: "Tekne fotoğrafları ve donanım", tab: "extra", icon: Ship },
+    { title: "Rota & SSS", text: "Saat akışı, koylar, sorular", tab: "routeFaq", icon: HelpCircle },
   ];
 
   return (
-    <Panel title="Panel özeti" description="En çok kullanılan düzenleme alanları ve son sistem durumu.">
-      <div className="admin-overview-grid">
-        <article className="admin-overview-card is-primary">
-          <span className="admin-overview-icon" aria-hidden="true">
-            {isDirty ? <CircleAlert size={24} /> : <CheckCircle2 size={24} />}
-          </span>
-          <div>
-            <h3>{isDirty ? "Kaydedilmemiş değişiklik var" : "İçerik kayıtlı"}</h3>
-            <p>{isDirty ? "Yaptığın değişiklikleri yayına almak için kaydet." : "Son kaydedilen içerik yayında."}</p>
-          </div>
-          <button type="button" onClick={onSave} disabled={!isDirty || isSaving}>
+    <section className="admin-overview-home" aria-label="Genel bakış">
+      <div className={`admin-overview-status ${isDirty ? "is-dirty" : ""}`}>
+        <span className="admin-overview-icon" aria-hidden="true">
+          {isDirty ? <CircleAlert size={24} /> : <CheckCircle2 size={24} />}
+        </span>
+        <div>
+          <span className="admin-status-kicker">Son durum</span>
+          <h2>{isDirty ? "Yayına alınmayı bekleyen değişiklikler var" : "İçerik yayında ve güncel"}</h2>
+          <p>{isDirty ? "Düzenlemeyi bitirdiğinde tek tuşla siteye aktarabilirsin." : "Şu an kaydedilmemiş bir değişiklik görünmüyor."}</p>
+        </div>
+        {isDirty ? (
+          <button type="button" onClick={onSave} disabled={isSaving}>
             <Save size={18} aria-hidden="true" />
             {isSaving ? "Kaydediliyor..." : "Kaydet"}
           </button>
-        </article>
-
-        <article className="admin-overview-card">
-          <span className="admin-overview-icon" aria-hidden="true">
-            <Camera size={24} />
-          </span>
-          <div>
-            <h3>{mediaSummary.total} medya alanı</h3>
-            <p>{mediaSummary.videos} video alanı bağlı. Fotoğraflar yüklenince otomatik hazırlanır.</p>
-          </div>
-        </article>
-
-        <article className="admin-overview-card">
-          <span className="admin-overview-icon" aria-hidden="true">
-            <FileText size={24} />
-          </span>
-          <div>
-            <h3>İçerik kontrolü</h3>
-            <p>
-              {qualitySummary.videoWithoutFile
-                ? `${qualitySummary.videoWithoutFile} video için dosya seçilmemiş.`
-                : "Fotoğraf ve video alanları tamam görünüyor."}
-            </p>
-          </div>
-        </article>
+        ) : null}
       </div>
 
       {uploadNotice ? (
@@ -1426,22 +1488,39 @@ function OverviewPanel({
         </div>
       ) : null}
 
-      <div className="admin-quick-grid">
-        {quickActions.map((action) => {
-          const Icon = action.icon;
+      {systemStatus?.requiresBlobStorage && !systemStatus.hasBlobStorage ? (
+        <div className="admin-system-notice is-error">
+          <CircleAlert size={18} aria-hidden="true" />
+          <span>Canlı ortamda medya yükleme ve içerik kaydetme için Blob bağlantısı eksik.</span>
+          <code>BLOB_READ_WRITE_TOKEN</code>
+        </div>
+      ) : null}
 
-          return (
-            <button className="admin-quick-card" key={action.tab} type="button" onClick={() => onOpenTab(action.tab)}>
-              <span aria-hidden="true">
-                <Icon size={21} />
-              </span>
-              <strong>{action.title}</strong>
-              <small>{action.text}</small>
-            </button>
-          );
-        })}
-      </div>
-    </Panel>
+      <section className="admin-overview-shortcuts" aria-labelledby="admin-shortcuts-title">
+        <header className="admin-overview-section-header">
+          <div>
+            <h2 id="admin-shortcuts-title">Hızlı düzenle</h2>
+            <p>En sık girilen bölümlere buradan geç.</p>
+          </div>
+        </header>
+
+        <div className="admin-quick-grid">
+          {quickActions.map((action) => {
+            const Icon = action.icon;
+
+            return (
+              <button className="admin-quick-card" key={action.tab} type="button" onClick={() => onOpenTab(action.tab)}>
+                <span aria-hidden="true">
+                  <Icon size={21} />
+                </span>
+                <strong>{action.title}</strong>
+                <small>{action.text}</small>
+              </button>
+            );
+          })}
+        </div>
+      </section>
+    </section>
   );
 }
 
@@ -1466,6 +1545,39 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
+function ImagePositionControl({ value, onChange }: { value?: string; onChange: (value: string) => void }) {
+  const focus = parseImageFocus(value);
+
+  function handleHorizontalChange(event: ChangeEvent<HTMLInputElement>) {
+    onChange(formatImagePosition(Number(event.target.value), focus.y));
+  }
+
+  function handleVerticalChange(event: ChangeEvent<HTMLInputElement>) {
+    onChange(formatImagePosition(focus.x, Number(event.target.value)));
+  }
+
+  return (
+    <div className="admin-image-focus" aria-label="Fotoğraf görünen alanı">
+      <div className="admin-image-focus-header">
+        <strong>Görünen alan</strong>
+        <span>
+          {focus.x}% / {focus.y}%
+        </span>
+      </div>
+      <label>
+        <span>Yatay odak</span>
+        <input type="range" min="0" max="100" value={focus.x} onChange={handleHorizontalChange} />
+        <small>Sol · Orta · Sağ</small>
+      </label>
+      <label>
+        <span>Dikey odak</span>
+        <input type="range" min="0" max="100" value={focus.y} onChange={handleVerticalChange} />
+        <small>Üst · Orta · Alt</small>
+      </label>
+    </div>
+  );
+}
+
 function MediaField({
   value,
   alt,
@@ -1478,6 +1590,8 @@ function MediaField({
   buttonLabel,
   emptyLabel,
   helpText,
+  objectPosition,
+  previewFrame = "default",
 }: {
   value: string;
   alt?: string;
@@ -1490,16 +1604,20 @@ function MediaField({
   buttonLabel?: string;
   emptyLabel?: string;
   helpText?: string;
+  objectPosition?: string;
+  previewFrame?: "default" | "captain";
 }) {
   const inputId = useId();
   const isVideo = preview === "video";
   const UploadIcon = isVideo ? Video : ImagePlus;
   const isUploading = uploadingKey === uploadKey;
   const actionLabel = buttonLabel ?? (isVideo ? "Video seç" : "Fotoğraf seç");
+  const mediaHelpText = helpText ?? (isVideo ? "MP4, WebM veya MOV. En fazla 120 MB." : "JPG, PNG veya WebP. En fazla 8 MB.");
   const [isDragging, setIsDragging] = useState(false);
   const [notice, setNotice] = useState<Notice | null>(null);
   const [localPreviewUrl, setLocalPreviewUrl] = useState("");
   const displayValue = localPreviewUrl || value;
+  const imageStyle: CSSProperties | undefined = objectPosition ? { objectPosition } : undefined;
 
   useEffect(() => {
     return () => {
@@ -1515,6 +1633,13 @@ function MediaField({
     }
 
     setNotice(null);
+    const validationError = getMediaValidationError(file, isVideo ? "video" : "image");
+
+    if (validationError) {
+      setNotice({ type: "error", text: validationError });
+      return;
+    }
+
     const nextPreviewUrl = URL.createObjectURL(file);
     setLocalPreviewUrl((currentPreviewUrl) => {
       if (currentPreviewUrl) {
@@ -1527,6 +1652,13 @@ function MediaField({
     try {
       const uploaded = await onUpload(file, uploadKey);
       onChange(uploaded.url);
+      setLocalPreviewUrl((currentPreviewUrl) => {
+        if (currentPreviewUrl) {
+          URL.revokeObjectURL(currentPreviewUrl);
+        }
+
+        return "";
+      });
       setNotice({
         type: "success",
         text: `${uploaded.kind === "video" ? "Video" : "Fotoğraf"} yüklendi. Yayına almak için kaydet.`,
@@ -1574,13 +1706,17 @@ function MediaField({
         onDragLeave={() => setIsDragging(false)}
         onDrop={onDrop}
       >
-        <div className={`admin-media-preview ${displayValue ? "" : "is-empty"} ${isVideo ? "is-video" : ""}`}>
+        <div
+          className={`admin-media-preview ${displayValue ? "" : "is-empty"} ${isVideo ? "is-video" : ""} ${
+            previewFrame === "captain" ? "is-captain" : ""
+          }`}
+        >
           {displayValue ? (
             isVideo ? (
               <video className="admin-media-video-preview" src={displayValue} controls preload="metadata" />
             ) : (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={displayValue} alt={alt || "Admin fotoğraf önizlemesi"} />
+              <img src={displayValue} alt={alt || "Admin fotoğraf önizlemesi"} style={imageStyle} />
             )
           ) : (
             <span>{emptyLabel ?? (isVideo ? "Video seçilmedi" : "Fotoğraf seçilmedi")}</span>
@@ -1602,7 +1738,7 @@ function MediaField({
           {notice.text}
         </p>
       ) : null}
-      {helpText ? <p className="admin-media-help">{helpText}</p> : null}
+      <p className="admin-media-help">{mediaHelpText}</p>
     </div>
   );
 }
@@ -1631,7 +1767,7 @@ function EditableTextItems({
       </div>
       <div className="admin-repeat-grid">
         {items.map((item, index) => (
-          <article className="admin-edit-card" key={`${title}-${item.title}-${index}`}>
+          <article className="admin-edit-card" key={`${title}-${index}`}>
             <Field label="Başlık">
               <input value={item.title} onChange={(event) => onChange(index, { title: event.target.value })} />
             </Field>

@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { LazyFloatingActions } from "./components/lazy-floating-actions";
+import { PageTransition } from "./components/page-transition";
 import { ScrollReveal } from "./components/scroll-reveal";
 import "./globals.css";
 
@@ -116,7 +117,7 @@ export default function RootLayout({
     <html lang="tr" data-scroll-behavior="smooth">
       <body>
         <ScrollReveal />
-        {children}
+        <PageTransition>{children}</PageTransition>
         <LazyFloatingActions />
       </body>
     </html>

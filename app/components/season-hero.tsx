@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { Snowflake, SunMedium } from "lucide-react";
+import { Fish, FishingHook, Snowflake, SunMedium } from "lucide-react";
 import { useState } from "react";
 import type { CmsHero } from "../lib/cms-types";
 import { type Season } from "../lib/site-data";
@@ -59,6 +59,17 @@ export function SeasonHero({ content, season, onSeasonChange }: SeasonHeroProps)
           sizes="100vw"
           className="hero-scene"
         />
+      </div>
+      <div className="hero-winter-icons" aria-hidden="true">
+        <span className="hero-fishing-line hero-fishing-line-one" />
+        <FishingHook className="hero-hook-icon hero-hook-one" size={42} strokeWidth={1.8} />
+        <Fish className="hero-fish-icon hero-fish-one" size={126} strokeWidth={1.55} />
+        <Fish className="hero-fish-icon hero-fish-two" size={84} strokeWidth={1.7} />
+        <Fish className="hero-fish-icon hero-fish-three" size={98} strokeWidth={1.6} />
+        <Fish className="hero-fish-icon hero-fish-four" size={62} strokeWidth={1.8} />
+        <span className="hero-bubble hero-bubble-one" />
+        <span className="hero-bubble hero-bubble-two" />
+        <span className="hero-bubble hero-bubble-three" />
       </div>
       <h1 id="hero-title" className="hero-title-backdrop">
         {content?.title ?? "4 MEVSİM ETKİNLİK"}
