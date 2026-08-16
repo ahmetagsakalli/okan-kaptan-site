@@ -8,7 +8,7 @@ Okan Kaptan Mordogan gezi, yuzme ve balik turlari icin hazirlanan Next.js web si
 - Mobil uyumlu liquid glass arayuz
 - Teknik SEO dosyalari: sitemap, robots, manifest ve metadata
 - Admin paneli ile icerik ve gorsel yonetimi
-- Vercel Blob destekli medya yukleme
+- VPS volume veya Vercel Blob destekli medya yukleme
 - Galeri, turlar, rota, hakkimizda, SSS ve iletisim bolumleri
 
 ## Lokal Calistirma
@@ -50,7 +50,7 @@ cp .env.production.example .env.production
 ```bash
 ADMIN_PASSWORD=guclu-admin-sifresi
 ADMIN_SESSION_SECRET=uzun-rastgele-bir-secret-en-az-32-karakter
-NEXT_PUBLIC_SITE_URL=https://okankaptan35.com
+NEXT_PUBLIC_SITE_URL=https://okankaptan.com
 ```
 
 VPS'te Vercel Blob kullanmak zorunlu degildir. `BLOB_READ_WRITE_TOKEN` bos kalirsa admin panelinden kaydedilen icerikler `data/`, yuklenen medyalar `public/uploads/` volume'lerinde saklanir.
@@ -73,7 +73,7 @@ sudo systemctl reload nginx
 SSL icin domain DNS'i VPS'e yonlendikten sonra:
 
 ```bash
-sudo certbot --nginx -d okankaptan35.com -d www.okankaptan35.com
+sudo certbot --nginx -d okankaptan.com -d www.okankaptan.com
 ```
 
 Guncelleme komutu:
@@ -100,4 +100,4 @@ pnpm build
 
 ## Canli Site
 
-https://okan-kaptan-site.vercel.app
+https://okankaptan.com

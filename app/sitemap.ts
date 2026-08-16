@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://okankaptan35.com";
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://okankaptan.com";
 const routes = [
   { path: "", priority: 1 },
   { path: "/galeri", priority: 0.86 },

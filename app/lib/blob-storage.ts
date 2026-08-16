@@ -5,7 +5,7 @@ export function hasBlobStorage() {
 }
 
 export function requiresPersistentBlobStorage() {
-  return process.env.VERCEL === "1" || process.env.NODE_ENV === "production";
+  return process.env.VERCEL === "1";
 }
 
 export async function readPrivateBlobText(pathname: string) {

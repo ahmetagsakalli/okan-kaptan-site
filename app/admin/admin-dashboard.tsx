@@ -1491,7 +1491,7 @@ function OverviewPanel({
       {systemStatus?.requiresBlobStorage && !systemStatus.hasBlobStorage ? (
         <div className="admin-system-notice is-error">
           <CircleAlert size={18} aria-hidden="true" />
-          <span>Canlı ortamda medya yükleme ve içerik kaydetme için Blob bağlantısı eksik.</span>
+          <span>Vercel ortamında medya yükleme ve içerik kaydetme için Blob bağlantısı eksik.</span>
           <code>BLOB_READ_WRITE_TOKEN</code>
         </div>
       ) : null}

@@ -4,7 +4,7 @@ import { PageTransition } from "./components/page-transition";
 import { ScrollReveal } from "./components/scroll-reveal";
 import "./globals.css";
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://okankaptan35.com";
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://okankaptan.com";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),

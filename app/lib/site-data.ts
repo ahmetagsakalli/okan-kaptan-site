@@ -36,7 +36,7 @@ export const googleMapsEmbedUrl =
 export const developerUrl = "https://kocyigityazilim.com";
 export const googleReviewsUrl =
   "https://www.google.com/search?q=Okan+kaptan+Mordo%C4%9Fan+gezi+ve+y%C3%BCzme+turlar%C4%B1+karaburun+yorumlar%C4%B1&si=APenkKm7iecQ4G6P-TsbSMFKIQtv3EFIqRAFw-i8uEbk55Z-_5AspuU_C4tEsUvKcQu1pJSx1GJiBNv3Ur6ZCq7IoAEYiIsBeCREommuKDGeJidjkZH0Xic%3D";
-export const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://okankaptan35.com";
+export const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://okankaptan.com";
 
 type IconItem = {
   icon: LucideIcon;

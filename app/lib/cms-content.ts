@@ -153,11 +153,15 @@ export async function saveSiteContent(content: CmsContent) {
   }
 
   if (requiresPersistentBlobStorage()) {
-    throw new Error("Canlı sitede kaydetmek için Vercel Blob bağlantısı gerekli. BLOB_READ_WRITE_TOKEN ayarını kontrol et.");
+    throw new Error("Vercel'de kaydetmek için Blob bağlantısı gerekli. BLOB_READ_WRITE_TOKEN ayarını kontrol et.");
   }
 
-  await mkdir(path.dirname(cmsDataPath), { recursive: true });
-  await writeFile(cmsDataPath, serialized, "utf8");
+  try {
+    await mkdir(path.dirname(cmsDataPath), { recursive: true });
+    await writeFile(cmsDataPath, serialized, "utf8");
+  } catch {
+    throw new Error("İçerik dosyası sunucu diskine kaydedilemedi. VPS'te /app/data volume ve izinlerini kontrol et.");
+  }
 
   return normalized;
 }

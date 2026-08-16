@@ -90,11 +90,20 @@ export async function POST(request: NextRequest) {
     const blobPathname = `uploads/${filename}`;
     const outputPath = path.join(uploadDir, filename);
     const sharp = (await import("sharp")).default;
-    const optimized = await sharp(bytes)
-      .rotate()
-      .resize({ width: 1800, withoutEnlargement: true })
-      .webp({ quality: 78 })
-      .toBuffer();
+    let optimized: Buffer;
+
+    try {
+      optimized = await sharp(bytes)
+        .rotate()
+        .resize({ width: 1800, withoutEnlargement: true })
+        .webp({ quality: 78 })
+        .toBuffer();
+    } catch {
+      return NextResponse.json(
+        { message: "Görsel işlenemedi. Dosyanın sağlam bir JPG, PNG veya WebP olduğundan emin ol." },
+        { status: 400 },
+      );
+    }
 
     if (await writePrivateBlobBytes(blobPathname, optimized, "image/webp")) {
       return NextResponse.json({
@@ -107,13 +116,20 @@ export async function POST(request: NextRequest) {
 
     if (requiresPersistentBlobStorage()) {
       return NextResponse.json(
-        { message: "Canlı sitede görsel yüklemek için Vercel Blob bağlantısı gerekli. BLOB_READ_WRITE_TOKEN ayarını kontrol et." },
+        { message: "Vercel'de görsel yüklemek için Blob bağlantısı gerekli. BLOB_READ_WRITE_TOKEN ayarını kontrol et." },
         { status: 500 },
       );
     }
 
-    await mkdir(uploadDir, { recursive: true });
-    await writeFile(outputPath, optimized);
+    try {
+      await mkdir(uploadDir, { recursive: true });
+      await writeFile(outputPath, optimized);
+    } catch {
+      return NextResponse.json(
+        { message: "Görsel sunucu diskine yazılamadı. VPS'te /app/public/uploads volume ve izinlerini kontrol et." },
+        { status: 500 },
+      );
+    }
 
     return NextResponse.json({
       url: `/uploads/${filename}`,
@@ -140,13 +156,20 @@ export async function POST(request: NextRequest) {
 
   if (requiresPersistentBlobStorage()) {
     return NextResponse.json(
-      { message: "Canlı sitede video yüklemek için Vercel Blob bağlantısı gerekli. BLOB_READ_WRITE_TOKEN ayarını kontrol et." },
+      { message: "Vercel'de video yüklemek için Blob bağlantısı gerekli. BLOB_READ_WRITE_TOKEN ayarını kontrol et." },
       { status: 500 },
     );
   }
 
-  await mkdir(uploadDir, { recursive: true });
-  await writeFile(outputPath, bytes);
+  try {
+    await mkdir(uploadDir, { recursive: true });
+    await writeFile(outputPath, bytes);
+  } catch {
+    return NextResponse.json(
+      { message: "Video sunucu diskine yazılamadı. VPS'te /app/public/uploads volume ve izinlerini kontrol et." },
+      { status: 500 },
+    );
+  }
 
   return NextResponse.json({
     url: `/uploads/${filename}`,
