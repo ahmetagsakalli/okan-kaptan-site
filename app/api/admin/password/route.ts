@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
   await saveAdminPassword(nextPassword);
 
   const response = NextResponse.json({ ok: true });
-  response.cookies.set(adminCookieName, createAdminToken(), adminCookieOptions);
+  response.cookies.set(adminCookieName, await createAdminToken(), adminCookieOptions);
 
   return response;
 }

@@ -26,7 +26,7 @@ export async function POST(request: Request) {
   }
 
   const response = NextResponse.json({ ok: true });
-  response.cookies.set(adminCookieName, createAdminToken(), adminCookieOptions);
+  response.cookies.set(adminCookieName, await createAdminToken(), adminCookieOptions);
 
   return response;
 }

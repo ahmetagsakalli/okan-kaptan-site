@@ -132,7 +132,7 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json({
-      url: `/uploads/${filename}`,
+      url: `/api/media/${blobPathname}`,
       size: optimized.byteLength,
       kind: "image",
       contentType: "image/webp",
@@ -172,7 +172,7 @@ export async function POST(request: NextRequest) {
   }
 
   return NextResponse.json({
-    url: `/uploads/${filename}`,
+    url: `/api/media/${blobPathname}`,
     size: bytes.byteLength,
     kind: "video",
     contentType,

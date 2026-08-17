@@ -12,6 +12,7 @@ const passwordKeyLength = 64;
 type AdminSettings = {
   passwordHash?: string;
   passwordSalt?: string;
+  sessionVersion?: string;
   updatedAt?: string;
 };
 
@@ -25,6 +26,7 @@ function isAdminSettings(value: unknown): value is AdminSettings {
   return (
     (settings.passwordHash === undefined || typeof settings.passwordHash === "string") &&
     (settings.passwordSalt === undefined || typeof settings.passwordSalt === "string") &&
+    (settings.sessionVersion === undefined || typeof settings.sessionVersion === "string") &&
     (settings.updatedAt === undefined || typeof settings.updatedAt === "string")
   );
 }
@@ -69,12 +71,23 @@ export async function verifyStoredPassword(password: string) {
   return safeBufferCompare(passwordHash, storedHash);
 }
 
+export async function getAdminSessionVersion() {
+  const settings = await readAdminSettings();
+
+  if (!settings?.passwordHash || !settings.passwordSalt) {
+    return "env-password";
+  }
+
+  return settings.sessionVersion ?? `stored-password:${settings.updatedAt ?? "legacy"}`;
+}
+
 export async function saveAdminPassword(password: string) {
   const passwordSalt = randomBytes(16).toString("base64url");
   const passwordHash = (await hashPassword(password, passwordSalt)).toString("base64url");
   const settings: AdminSettings = {
     passwordHash,
     passwordSalt,
+    sessionVersion: randomBytes(24).toString("base64url"),
     updatedAt: new Date().toISOString(),
   };
   const serialized = `${JSON.stringify(settings, null, 2)}\n`;

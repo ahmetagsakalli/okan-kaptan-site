@@ -1,5 +1,7 @@
-import { readFile } from "node:fs/promises";
+import { createReadStream } from "node:fs";
+import { stat } from "node:fs/promises";
 import path from "node:path";
+import { Readable } from "node:stream";
 import { NextRequest, NextResponse } from "next/server";
 import { readPrivateBlob } from "../../../lib/blob-storage";
 
@@ -33,6 +35,30 @@ function getLocalContentType(pathname: string) {
   return "image/webp";
 }
 
+function streamFile(pathname: string, start?: number, end?: number) {
+  return Readable.toWeb(createReadStream(pathname, { start, end })) as ReadableStream<Uint8Array>;
+}
+
+function parseRangeHeader(range: string | null, size: number) {
+  const match = range?.match(/^bytes=(\d*)-(\d*)$/);
+
+  if (!match) {
+    return null;
+  }
+
+  const [, startValue, endValue] = match;
+  const fallbackStart = startValue ? Number.parseInt(startValue, 10) : 0;
+  const fallbackEnd = endValue ? Number.parseInt(endValue, 10) : size - 1;
+  const start = Number.isFinite(fallbackStart) ? fallbackStart : 0;
+  const end = Number.isFinite(fallbackEnd) ? Math.min(fallbackEnd, size - 1) : size - 1;
+
+  if (start < 0 || end < start || start >= size) {
+    return null;
+  }
+
+  return { start, end };
+}
+
 export async function GET(request: NextRequest, context: MediaRouteContext) {
   const { pathname = [] } = await context.params;
   const blobPathname = sanitizePathname(pathname);
@@ -62,12 +88,31 @@ export async function GET(request: NextRequest, context: MediaRouteContext) {
     const localPath = path.join(process.cwd(), "public", blobPathname);
 
     try {
-      const file = await readFile(localPath);
+      const fileStat = await stat(localPath);
+      const contentType = getLocalContentType(blobPathname);
+      const range = parseRangeHeader(request.headers.get("range"), fileStat.size);
 
-      return new NextResponse(file, {
+      if (range) {
+        const contentLength = range.end - range.start + 1;
+
+        return new NextResponse(streamFile(localPath, range.start, range.end), {
+          status: 206,
+          headers: {
+            "Accept-Ranges": "bytes",
+            "Cache-Control": "public, max-age=31536000, immutable",
+            "Content-Length": String(contentLength),
+            "Content-Range": `bytes ${range.start}-${range.end}/${fileStat.size}`,
+            "Content-Type": contentType,
+          },
+        });
+      }
+
+      return new NextResponse(streamFile(localPath), {
         headers: {
+          "Accept-Ranges": "bytes",
           "Cache-Control": "public, max-age=31536000, immutable",
-          "Content-Type": getLocalContentType(blobPathname),
+          "Content-Length": String(fileStat.size),
+          "Content-Type": contentType,
           ...(etag ? { ETag: etag } : {}),
         },
       });
